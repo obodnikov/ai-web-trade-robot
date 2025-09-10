@@ -555,15 +555,15 @@
                 let previousClose = openPrice; // Fallback to open price
                 
                 try {
-                    // Try getting recent historical data (30 days instead of 90)
+                    // Try getting recent historical data (70 days instead of 90)
                     const endDate = new Date();
                     endDate.setDate(endDate.getDate() - 1); // Yesterday
                     const startDate = new Date();
-                    startDate.setDate(startDate.getDate() - 30); // 30 days ago
+                    startDate.setDate(startDate.getDate() - 70); // 70 days ago
                     
                     const historyUrl = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${startDate.toISOString().split('T')[0]}/${endDate.toISOString().split('T')[0]}?adjusted=true&sort=asc&apikey=${apiKey}`;
                     
-                    console.log(`  📅 Trying to fetch 30-day history for ${symbol}...`);
+                    console.log(`  📅 Trying to fetch 70-day history for ${symbol}...`);
                     const historyResponse = await fetch(historyUrl, {
                         headers: {
                             'User-Agent': 'Trading-Robot/1.0',
