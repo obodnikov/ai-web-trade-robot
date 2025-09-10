@@ -472,6 +472,109 @@
             };
         }
 
+        async function fetchPolygonData(symbol) {
+            // Polygon.io API endpoints (using free tier)
+            // Get your free API key at: https://polygon.io/
+            const apiKey = 'DEMO'; // Replace with your actual Polygon.io API key
+            
+            try {
+                console.log(`  📡 Fetching from Polygon.io: ${symbol}`);
+                
+                // Get current quote data
+                const quoteUrl = `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?adjusted=true&apikey=${apiKey}`;
+                const quoteResponse = await fetch(quoteUrl, {
+                    headers: {
+                        'User-Agent': 'Trading-Robot/1.0',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!quoteResponse.ok) {
+                    throw new Error(`Polygon.io quote API failed: ${quoteResponse.status}`);
+                }
+                
+                const quoteData = await quoteResponse.json();
+                
+                // Validate Polygon.io quote response
+                if (quoteData.status !== 'OK' || !quoteData.results || quoteData.results.length === 0) {
+                    throw new Error('Invalid Polygon.io quote response or no data available');
+                }
+                
+                // Get historical data (90 days)
+                const endDate = new Date().toISOString().split('T')[0];
+                const startDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                const historyUrl = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${startDate}/${endDate}?adjusted=true&sort=asc&apikey=${apiKey}`;
+                
+                const historyResponse = await fetch(historyUrl, {
+                    headers: {
+                        'User-Agent': 'Trading-Robot/1.0',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!historyResponse.ok) {
+                    throw new Error(`Polygon.io history API failed: ${historyResponse.status}`);
+                }
+                
+                const historyData = await historyResponse.json();
+                
+                if (historyData.status !== 'OK' || !historyData.results || historyData.results.length === 0) {
+                    throw new Error('Insufficient historical data from Polygon.io');
+                }
+                
+                // Extract current price data
+                const currentData = quoteData.results[0];
+                const currentPrice = currentData.c; // Close price
+                const openPrice = currentData.o;     // Open price
+                const highPrice = currentData.h;     // High price
+                const lowPrice = currentData.l;      // Low price
+                const volume = currentData.v;        // Volume
+                
+                // Calculate previous close (use last trading day from history)
+                const previousClose = historyData.results[historyData.results.length - 2]?.c || openPrice;
+                
+                // Validate price data
+                if (!currentPrice || currentPrice <= 0 || currentPrice > 50000) {
+                    throw new Error(`Invalid current price from Polygon.io: ${currentPrice}`);
+                }
+                
+                // Extract historical closing prices for technical analysis
+                const historicalPrices = historyData.results
+                    .map(day => day.c) // Close prices
+                    .filter(price => price !== null && price > 0 && price < 50000);
+                
+                if (historicalPrices.length < 20) {
+                    throw new Error(`Insufficient historical data: only ${historicalPrices.length} data points`);
+                }
+                
+                // Calculate change metrics
+                const change = currentPrice - previousClose;
+                const changePercent = (change / previousClose) * 100;
+                
+                console.log(`✅ Polygon.io data for ${symbol}: $${currentPrice.toFixed(2)} (${change >= 0 ? '+' : ''}${change.toFixed(2)}, ${changePercent.toFixed(2)}%)`);
+                console.log(`   📊 OHLC: O:$${openPrice.toFixed(2)} H:$${highPrice.toFixed(2)} L:$${lowPrice.toFixed(2)} C:$${currentPrice.toFixed(2)}`);
+                console.log(`   📈 Volume: ${volume.toLocaleString()} | Historical points: ${historicalPrices.length}`);
+                
+                return {
+                    symbol: symbol.toUpperCase(),
+                    price: currentPrice,
+                    historicalPrices: historicalPrices,
+                    volume: volume || 0,
+                    marketCap: 'N/A', // Polygon.io doesn't provide market cap in basic endpoints
+                    previousClose: previousClose,
+                    change: change,
+                    changePercent: changePercent,
+                    openPrice: openPrice,
+                    highPrice: highPrice,
+                    lowPrice: lowPrice,
+                    source: 'Polygon.io (Live Market Data)'
+                };
+                
+            } catch (error) {
+                console.error(`❌ Polygon.io error for ${symbol}:`, error.message);
+                throw error;
+            }
+        }
         async function fetchYahooFinanceData(symbol) {
             const quoteUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=5m`;
             const historyUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=3mo&interval=1d`;
@@ -595,14 +698,14 @@
         // Main data fetching function with fallback logic
         async function fetchStockData(symbol) {
             try {
-                console.log(`  1️⃣ Trying Yahoo Finance for ${symbol}...`);
-                const yfinanceData = await fetchYahooFinanceData(symbol);
-                if (yfinanceData) {
-                    console.log(`  ✅ Yahoo Finance SUCCESS for ${symbol}`);
-                    return yfinanceData;
+                console.log(`  1️⃣ Trying Polygon.IO for ${symbol}...`);
+                const polygonData = await fetchPolygonData(symbol);
+                if (polygonData) {
+                    console.log(`  ✅ Polygon.IO SUCCESS for ${symbol}`);
+                    return polygonData;
                 }
             } catch (error) {
-                console.log(`  ❌ Yahoo Finance FAILED: ${error.message}`);
+                console.log(`  ❌ Polygon.IO FAILED: ${error.message}`);
             }
             
             try {
@@ -726,7 +829,7 @@
             let sourceIcon = '';
             let dataQualityBadge = '';
             
-            if (stockData.source.includes('Yahoo Finance')) {
+            if (stockData.source.includes('Polygon.io')) {
                 sourceStyle = 'color: #27ae60; font-weight: bold;';
                 sourceIcon = '🟢';
                 dataQualityBadge = '<span style="background: #27ae60; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; margin-left: 5px;">LIVE</span>';
