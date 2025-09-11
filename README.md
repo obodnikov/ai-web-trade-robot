@@ -1,93 +1,266 @@
-# ai-web-trade-robot
+# 🤖 Trading Dry-Run Robot
 
+A comprehensive stock market analysis tool that provides real-time trading signals using technical indicators. Built with vanilla JavaScript and powered by multiple data sources including Polygon.io and Alpha Vantage APIs.
 
+![Trading Robot Demo](https://img.shields.io/badge/Status-Ready-brightgreen) ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-yellow) ![API](https://img.shields.io/badge/API-Polygon.io-blue) ![License](https://img.shields.io/badge/License-MIT-green)
 
-## Getting started
+## ✨ Features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+- **Real-time Stock Data**: Integration with Polygon.io and Alpha Vantage APIs
+- **Technical Analysis**: MACD, RSI, and Simple Moving Average indicators
+- **Trading Signals**: Buy/Sell/Hold recommendations with confidence levels
+- **Fallback System**: Graceful degradation from live data to realistic demo data
+- **Responsive Design**: Works on desktop, tablet, and mobile devices
+- **Single-Run Analysis**: On-demand analysis without continuous monitoring
+- **Professional UI**: Clean, modern interface with detailed data visualization
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+## 📊 Technical Indicators
 
-## Add your files
+### MACD (Moving Average Convergence Divergence)
+- **Buy Signal**: MACD line crosses above signal line with positive histogram
+- **Sell Signal**: MACD line crosses below signal line with negative histogram
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### RSI (Relative Strength Index)
+- **Buy Signal**: RSI below 30 (oversold condition)
+- **Sell Signal**: RSI above 70 (overbought condition)
 
+### Simple Moving Averages
+- **Buy Signal**: Price above SMA20 and SMA20 > SMA50
+- **Sell Signal**: Price below SMA20 and SMA20 < SMA50
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Modern web browser (Chrome, Firefox, Safari, Edge)
+- Internet connection for API access
+- Optional: Free API keys from Polygon.io and Alpha Vantage
+
+### Installation
+
+1. **Clone or Download**
+   ```bash
+   git clone https://github.com/your-username/trading-robot.git
+   cd trading-robot
+   ```
+
+2. **File Structure**
+   ```
+   trading-robot/
+   ├── index.html          # Main HTML file
+   ├── trading-robot.js    # JavaScript functions
+   ├── README.md          # This file
+   └── deployment/        # Optional: Nginx configs
+   ```
+
+3. **Open in Browser**
+   - Simply open `index.html` in your web browser
+   - Or serve via local web server for development
+
+## 🔑 API Setup (Optional but Recommended)
+
+The robot works with demo data out of the box, but for real-time data:
+
+### 1. Polygon.io API Key
+1. Visit [polygon.io](https://polygon.io/)
+2. Sign up for free account (5 calls/minute)
+3. Get your API key from dashboard
+4. Replace `'DEMO'` in `trading-robot.js`:
+   ```javascript
+   const apiKey = 'YOUR_POLYGON_API_KEY'; // Line ~150
+   ```
+
+### 2. Alpha Vantage API Key  
+1. Visit [alphavantage.co](https://www.alphavantage.co/support/#api-key)
+2. Get free API key (5 calls/minute, 500/day)
+3. Replace `'demo'` in `trading-robot.js`:
+   ```javascript
+   const apiKey = 'YOUR_ALPHA_VANTAGE_KEY'; // Line ~280
+   ```
+
+## 📱 Usage
+
+### Basic Operation
+1. **Enter Stock Tickers**: Add comma-separated symbols (e.g., `AAPL,GOOGL,MSFT`)
+2. **Select Strategy**: Choose from MACD, RSI, SMA, or All Combined
+3. **Start Analysis**: Click the analysis button for one-time execution
+4. **Review Results**: View detailed analysis cards with trading recommendations
+
+### Sample Tickers
+- **Mega Cap**: AAPL, MSFT, NVDA, GOOGL, AMZN
+- **Tech**: META, NFLX, CRM, ADBE, ORCL
+- **Finance**: JPM, BAC, GS, V, MA
+- **EV/Auto**: TSLA, RIVN, LCID, F, GM
+- **Media**: WBD, DIS, SPOT, ROKU
+- **Crypto**: COIN, MSTR
+
+## 🏗️ Data Sources Priority
+
+1. **Primary**: Polygon.io (Real-time market data)
+   - ✅ Live OHLC data
+   - ✅ Historical prices
+   - ✅ Volume data
+   - ⚡ 5 calls/minute free
+
+2. **Fallback**: Alpha Vantage (Financial data API)
+   - ✅ Global quote data
+   - ✅ Generated historical data
+   - ⚡ 5 calls/minute, 500/day free
+
+3. **Demo**: Realistic simulation
+   - ✅ Based on actual market prices
+   - ✅ Realistic volatility patterns
+   - ✅ No API limits
+
+## 🔧 Development
+
+### Local Development
+```bash
+# Serve with Python (if needed)
+python -m http.server 8000
+
+# Or with Node.js
+npx serve .
+
+# Or simply open index.html in browser
 ```
-cd existing_repo
-git remote add origin http://gitlab.obodnikov.com/mike/ai-web-trade-robot.git
-git branch -M main
-git push -uf origin main
+
+### Cache Issues During Development
+If you modify `trading-robot.js` and don't see changes:
+
+- **Hard Refresh**: `Ctrl+F5` (Windows) or `Cmd+Shift+R` (Mac)
+- **Developer Tools**: F12 → Network tab → "Disable cache"
+- **Incognito Mode**: `Ctrl+Shift+N` for fresh session
+
+### Customizing Strategies
+Edit `trading-robot.js` functions:
+- `calculateMACD()`: Modify MACD parameters
+- `calculateRSI()`: Adjust RSI period
+- `generateTradingSignal()`: Add new indicators or modify logic
+
+## 🌐 Deployment
+
+### Simple Hosting
+- Upload `index.html` and `trading-robot.js` to any web server
+- Ensure both files are in the same directory
+- Configure HTTPS for API access
+
+### Nginx Deployment
+Use the included Nginx configuration for production:
+```bash
+# Copy files to web directory
+sudo cp index.html trading-robot.js /var/www/trading-robot/html/
+
+# Configure nginx (see deployment guide)
+sudo cp nginx.conf /etc/nginx/sites-available/trading-robot
 ```
 
-## Integrate with your tools
+### API Considerations
+- **CORS**: APIs may require HTTPS in production
+- **Rate Limits**: Monitor API usage to avoid limits
+- **Error Handling**: Robot gracefully falls back to demo data
 
-- [ ] [Set up project integrations](http://gitlab.obodnikov.com/mike/ai-web-trade-robot/-/settings/integrations)
+## 📊 Output Format
 
-## Collaborate with your team
+Each analysis provides:
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### Stock Information
+- Current price and daily change
+- Open, High, Low, Close (OHLC)
+- Volume and market data
+- Data source quality indicators
 
-## Test and Deploy
+### Technical Indicators
+- RSI value with color coding
+- MACD line and signal values
+- SMA20 and SMA50 levels
+- Price position relative to moving averages
 
-Use the built-in continuous integration in GitLab.
+### Trading Recommendation
+- **Action**: BUY, SELL, or HOLD
+- **Confidence**: Percentage based on signal strength
+- **Target Price**: Suggested entry/exit point
+- **Reasoning**: Why the signal was generated
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+## ⚠️ Disclaimers
 
-***
+- **Educational Purpose**: This tool is for learning and demonstration only
+- **Not Financial Advice**: Do not use for actual trading decisions
+- **Demo Data**: Some results may use simulated data for demonstration
+- **No Guarantees**: Past performance doesn't predict future results
+- **Risk Warning**: Trading involves substantial risk of loss
 
-# Editing this README
+## 🛠️ Technical Details
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### Dependencies
+- **None**: Pure vanilla JavaScript
+- **APIs**: Polygon.io and Alpha Vantage (optional)
+- **Browser**: Modern ES6+ support required
 
-## Suggestions for a good README
+### Performance
+- **Lightweight**: ~50KB total size
+- **Fast**: Single-run analysis completes in seconds
+- **Responsive**: Works on all screen sizes
+- **Offline**: Demo mode works without internet
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### Browser Support
+- ✅ Chrome 60+
+- ✅ Firefox 55+
+- ✅ Safari 11+
+- ✅ Edge 79+
 
-## Name
-Choose a self-explaining name for your project.
+## 🤝 Contributing
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+1. **Fork** the repository
+2. **Create** feature branch (`git checkout -b feature/amazing-feature`)
+3. **Commit** changes (`git commit -m 'Add amazing feature'`)
+4. **Push** to branch (`git push origin feature/amazing-feature`)
+5. **Open** Pull Request
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+### Areas for Contribution
+- Additional technical indicators
+- New data source integrations
+- UI/UX improvements
+- Performance optimizations
+- Mobile app development
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## 📝 Changelog
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### v1.0.0 (Current)
+- ✅ Initial release with Polygon.io integration
+- ✅ MACD, RSI, SMA technical indicators
+- ✅ Fallback data system
+- ✅ Single-run analysis mode
+- ✅ Responsive design
+- ✅ Comprehensive error handling
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Planned Features
+- 📈 Chart visualization
+- 📊 Portfolio tracking
+- 🔔 Alert system
+- 📱 Mobile app
+- 🤖 Machine learning signals
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+## 📞 Support
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- **Issues**: [GitHub Issues](https://github.com/your-username/trading-robot/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/trading-robot/discussions)
+- **Email**: support@tradingrobot.com
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 📄 License
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## 🙏 Acknowledgments
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+- **Polygon.io**: For providing excellent financial data API
+- **Alpha Vantage**: For reliable backup data source
+- **Technical Analysis Community**: For indicator algorithms and strategies
+- **Open Source**: Built with love for the developer community
 
-## License
-For open source projects, say how it is licensed.
+---
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+**⚡ Ready to analyze some stocks?** Just open `index.html` and start trading (virtually)! 
+
+**🔧 Need help?** Check the console logs for detailed data source information and debugging.
+
+**📈 Happy Trading!** (Remember: This is for educational purposes only!)
