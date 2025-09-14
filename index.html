@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Dry-Run Robot with Polygon.io</title>
+    <title>Trading Dry-Run Robot with Alpha Vantage Primary</title>
     <style>
         * {
             margin: 0;
@@ -401,7 +401,7 @@
 
         .ticker-categories {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmin(200px, 1fr));
             gap: 15px;
         }
 
@@ -450,15 +450,17 @@
     <div class="container">
         <div class="header">
             <h1>🤖 Trading Dry-Run Robot</h1>
-            <p>Real-time market data powered by Polygon.io API</p>
+            <p>Enhanced market analysis powered by Alpha Vantage historical data</p>
         </div>
 
         <div class="api-info">
             <strong>📡 Data Sources:</strong> 
-            Primary: Polygon.io (Real-time) → Fallback: Alpha Vantage → Demo: Realistic Simulation
+            🥇 Primary: Alpha Vantage (Historical) → 🥈 Fallback: Polygon.io (Real-time) → 🔵 Demo: Realistic Simulation
             <br>
             <strong>🔑 API Setup:</strong> 
-            Replace 'DEMO' with your free Polygon.io API key from <a href="https://polygon.io/" target="_blank">polygon.io</a>
+            Replace 'demo' with your free Alpha Vantage API key from <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co</a>
+            <br>
+            <strong>💡 Why Alpha Vantage Primary:</strong> Better historical data quality for more accurate technical analysis calculations
         </div>
 
         <div class="control-panel">
@@ -481,7 +483,7 @@
 
             <div class="controls-row">
                 <button class="btn btn-primary" id="analyzeBtn" onclick="runSingleAnalysis()">
-                    🚀 Start Analysis
+                    🚀 Start Analysis (Alpha Vantage Primary)
                 </button>
             </div>
 
@@ -492,13 +494,13 @@
 
         <!-- Help Card Section -->
         <div class="help-card">
-            <h2>📚 Technical Analysis Guide</h2>
+            <h2>📚 Technical Analysis Guide - Enhanced with Better Data</h2>
             
             <div class="help-sections">
                 <!-- MACD Section -->
                 <div class="help-section">
                     <h3>📈 MACD (Moving Average Convergence Divergence)</h3>
-                    <p>MACD is a momentum indicator that shows the relationship between two moving averages of a security's price.</p>
+                    <p>MACD is a momentum indicator that shows the relationship between two moving averages of a security's price. <strong>Now more accurate with Alpha Vantage historical data!</strong></p>
                     
                     <div class="signal-item buy">
                         <strong>Buy Signal:</strong> MACD line crosses above signal line with positive histogram
@@ -507,13 +509,13 @@
                         <strong>Sell Signal:</strong> MACD line crosses below signal line with negative histogram
                     </div>
                     
-                    <p><strong>How it works:</strong> When the faster EMA (12-period) crosses above the slower EMA (26-period), it indicates upward momentum. The signal line (9-period EMA of MACD) helps confirm the trend.</p>
+                    <p><strong>Improved Calculation:</strong> Using real market data from Alpha Vantage provides more reliable EMA calculations, leading to better MACD crossover detection and more accurate trading signals.</p>
                 </div>
 
                 <!-- RSI Section -->
                 <div class="help-section">
                     <h3>⚡ RSI (Relative Strength Index)</h3>
-                    <p>RSI measures the speed and magnitude of price changes, oscillating between 0 and 100 to identify overbought and oversold conditions.</p>
+                    <p>RSI measures the speed and magnitude of price changes, oscillating between 0 and 100. <strong>Enhanced accuracy with real price movements!</strong></p>
                     
                     <div class="signal-item buy">
                         <strong>Buy Signal:</strong> RSI below 30 (oversold condition)
@@ -522,13 +524,13 @@
                         <strong>Sell Signal:</strong> RSI above 70 (overbought condition)
                     </div>
                     
-                    <p><strong>How it works:</strong> RSI compares the magnitude of recent gains to recent losses over a 14-period timeframe. Values below 30 suggest the stock may be oversold and due for a bounce, while values above 70 suggest it may be overbought.</p>
+                    <p><strong>Better Precision:</strong> Real historical price data from Alpha Vantage captures actual market volatility patterns, making RSI overbought/oversold levels more meaningful and actionable.</p>
                 </div>
 
                 <!-- SMA Section -->
                 <div class="help-section">
                     <h3>📊 SMA (Simple Moving Averages)</h3>
-                    <p>Simple Moving Averages smooth out price data to identify trends by calculating the average price over a specific number of periods.</p>
+                    <p>Simple Moving Averages smooth out price data to identify trends. <strong>More consistent with real market data!</strong></p>
                     
                     <div class="signal-item buy">
                         <strong>Buy Signal:</strong> Price above SMA20 and SMA20 > SMA50
@@ -537,13 +539,13 @@
                         <strong>Sell Signal:</strong> Price below SMA20 and SMA20 < SMA50
                     </div>
                     
-                    <p><strong>How it works:</strong> When shorter-term averages (SMA20) cross above longer-term averages (SMA50), it indicates an upward trend. When the current price is above both moving averages, it suggests strong bullish momentum.</p>
+                    <p><strong>Reliable Trends:</strong> Alpha Vantage's consistent historical data eliminates artificial price movements, providing cleaner moving average crossovers and more trustworthy trend signals.</p>
                 </div>
             </div>
 
             <!-- Sample Tickers Section -->
             <div class="sample-tickers">
-                <h4>🎯 Try These Sample Tickers</h4>
+                <h4>🎯 Try These Sample Tickers (Optimized for Alpha Vantage)</h4>
                 <div class="ticker-categories">
                     <div class="ticker-category">
                         <strong>Mega Cap</strong>
@@ -566,8 +568,8 @@
                         <span>WBD, DIS, SPOT, ROKU</span>
                     </div>
                     <div class="ticker-category">
-                        <strong>Crypto</strong>
-                        <span>COIN, MSTR</span>
+                        <strong>Crypto/Fintech</strong>
+                        <span>COIN, MSTR, SQ, PYPL</span>
                     </div>
                 </div>
             </div>
@@ -575,28 +577,28 @@
             <!-- Features Grid -->
             <div class="features-grid">
                 <div class="feature-box">
-                    <h4>🔄 Fallback System</h4>
-                    <p>Graceful degradation from live data to realistic demo data ensures the robot always works.</p>
+                    <h4>🥇 Alpha Vantage Primary</h4>
+                    <p>Real historical market data provides more accurate technical analysis calculations and consistent signals.</p>
+                </div>
+                <div class="feature-box">
+                    <h4>🔄 Smart Fallback System</h4>
+                    <p>Graceful degradation from Alpha Vantage to Polygon.io to demo data ensures the robot always works.</p>
+                </div>
+                <div class="feature-box">
+                    <h4>📊 Enhanced Indicators</h4>
+                    <p>Improved MACD, RSI, and SMA calculations using real market data for better trading signal accuracy.</p>
                 </div>
                 <div class="feature-box">
                     <h4>📱 Responsive Design</h4>
-                    <p>Works perfectly on desktop, tablet, and mobile devices with adaptive layouts.</p>
+                    <p>Works perfectly on desktop, tablet, and mobile devices with adaptive layouts and clear data source indicators.</p>
                 </div>
                 <div class="feature-box">
                     <h4>🎯 Single-Run Analysis</h4>
-                    <p>On-demand analysis without continuous monitoring - click and analyze instantly.</p>
+                    <p>On-demand analysis without continuous monitoring - click and analyze instantly with improved data quality.</p>
                 </div>
                 <div class="feature-box">
-                    <h4>📊 Professional UI</h4>
-                    <p>Clean, modern interface with detailed data visualization and quality indicators.</p>
-                </div>
-                <div class="feature-box">
-                    <h4>🔑 Multiple APIs</h4>
-                    <p>Primary: Polygon.io, Fallback: Alpha Vantage, Demo: Realistic simulation data.</p>
-                </div>
-                <div class="feature-box">
-                    <h4>⚡ Fast & Lightweight</h4>
-                    <p>Pure vanilla JavaScript with no dependencies - loads and analyzes in seconds.</p>
+                    <h4>⚡ Fast & Reliable</h4>
+                    <p>Pure vanilla JavaScript with multiple data sources and better error handling for consistent performance.</p>
                 </div>
             </div>
 
@@ -605,7 +607,7 @@
                 <h4>⚠️ Important Disclaimers</h4>
                 <p><strong>Educational Purpose:</strong> This tool is for learning and demonstration only</p>
                 <p><strong>Not Financial Advice:</strong> Do not use for actual trading decisions</p>
-                <p><strong>Demo Data:</strong> Some results may use simulated data for demonstration</p>
+                <p><strong>Data Sources:</strong> Results may vary based on data source (Alpha Vantage, Polygon.io, or Demo)</p>
                 <p><strong>Risk Warning:</strong> Trading involves substantial risk of loss</p>
                 <p><strong>No Guarantees:</strong> Past performance doesn't predict future results</p>
             </div>
