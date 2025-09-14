@@ -1,4 +1,4 @@
-// trading-robot.js - Trading Robot JavaScript Functions
+// trading-robot.js - Trading Robot with Alpha Vantage as Primary Data Source
 
 let isAnalyzing = false;
 
@@ -11,29 +11,85 @@ function calculateSMA(prices, period) {
 
 function calculateEMA(prices, period) {
     if (prices.length < period) return null;
+    
+    // Proper EMA calculation starting with SMA
+    const sma = prices.slice(0, period).reduce((sum, price) => sum + price, 0) / period;
     const k = 2 / (period + 1);
-    let ema = prices[0];
-    for (let i = 1; i < prices.length; i++) {
+    let ema = sma;
+    
+    for (let i = period; i < prices.length; i++) {
         ema = (prices[i] * k) + (ema * (1 - k));
     }
+    
     return ema;
 }
 
 function calculateMACD(prices, fastPeriod = 12, slowPeriod = 26, signalPeriod = 9) {
-    if (prices.length < slowPeriod) return null;
+    if (prices.length < slowPeriod + signalPeriod) return null;
     
-    const fastEMA = calculateEMA(prices, fastPeriod);
-    const slowEMA = calculateEMA(prices, slowPeriod);
+    // Calculate EMAs for the entire price series
+    const fastEMAs = [];
+    const slowEMAs = [];
+    const macdLine = [];
     
-    if (!fastEMA || !slowEMA) return null;
+    // Calculate fast EMA series
+    if (prices.length < fastPeriod) return null;
+    let fastEMA = prices.slice(0, fastPeriod).reduce((sum, p) => sum + p, 0) / fastPeriod;
+    const fastK = 2 / (fastPeriod + 1);
     
-    const macdLine = fastEMA - slowEMA;
-    const signalLine = calculateEMA([macdLine], signalPeriod);
+    for (let i = 0; i < prices.length; i++) {
+        if (i < fastPeriod) {
+            fastEMAs.push(null);
+        } else if (i === fastPeriod) {
+            fastEMAs.push(fastEMA);
+        } else {
+            fastEMA = (prices[i] * fastK) + (fastEMA * (1 - fastK));
+            fastEMAs.push(fastEMA);
+        }
+    }
+    
+    // Calculate slow EMA series
+    let slowEMA = prices.slice(0, slowPeriod).reduce((sum, p) => sum + p, 0) / slowPeriod;
+    const slowK = 2 / (slowPeriod + 1);
+    
+    for (let i = 0; i < prices.length; i++) {
+        if (i < slowPeriod) {
+            slowEMAs.push(null);
+        } else if (i === slowPeriod) {
+            slowEMAs.push(slowEMA);
+        } else {
+            slowEMA = (prices[i] * slowK) + (slowEMA * (1 - slowK));
+            slowEMAs.push(slowEMA);
+        }
+    }
+    
+    // Calculate MACD line
+    for (let i = 0; i < prices.length; i++) {
+        if (fastEMAs[i] !== null && slowEMAs[i] !== null) {
+            macdLine.push(fastEMAs[i] - slowEMAs[i]);
+        } else {
+            macdLine.push(null);
+        }
+    }
+    
+    // Calculate Signal line (EMA of MACD line)
+    const validMACDValues = macdLine.filter(v => v !== null);
+    if (validMACDValues.length < signalPeriod) return null;
+    
+    let signalEMA = validMACDValues.slice(0, signalPeriod).reduce((sum, v) => sum + v, 0) / signalPeriod;
+    const signalK = 2 / (signalPeriod + 1);
+    
+    for (let i = signalPeriod; i < validMACDValues.length; i++) {
+        signalEMA = (validMACDValues[i] * signalK) + (signalEMA * (1 - signalK));
+    }
+    
+    const currentMACD = macdLine[macdLine.length - 1];
+    const histogram = currentMACD - signalEMA;
     
     return {
-        macd: macdLine,
-        signal: signalLine || macdLine,
-        histogram: macdLine - (signalLine || macdLine)
+        macd: currentMACD,
+        signal: signalEMA,
+        histogram: histogram
     };
 }
 
@@ -160,13 +216,138 @@ function generateDemoData(symbol) {
     };
 }
 
+// PRIMARY: Alpha Vantage with TIME_SERIES_DAILY
+async function fetchAlphaVantageData(symbol) {
+    // Alpha Vantage as PRIMARY data source using TIME_SERIES_DAILY
+    // Get your free API key at: https://www.alphavantage.co/support/#api-key
+    const apiKey = 'demo'; // Replace with your Alpha Vantage API key
+    
+    try {
+        console.log(`  🥇 PRIMARY: Fetching from Alpha Vantage: ${symbol}`);
+        
+        // Use TIME_SERIES_DAILY for comprehensive data
+        const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`;
+        const response = await fetch(dailyUrl, {
+            headers: {
+                'User-Agent': 'Trading-Robot/1.0',
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Alpha Vantage API failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Check for API limit or error
+        if (data['Error Message']) {
+            throw new Error(`Alpha Vantage error: ${data['Error Message']}`);
+        }
+        
+        if (data['Note']) {
+            throw new Error('Alpha Vantage API call frequency limit reached');
+        }
+        
+        // Check for valid time series data
+        const timeSeries = data['Time Series (Daily)'];
+        if (!timeSeries) {
+            throw new Error('No time series data from Alpha Vantage');
+        }
+        
+        // Get dates sorted in descending order (most recent first)
+        const dates = Object.keys(timeSeries).sort((a, b) => new Date(b) - new Date(a));
+        
+        if (dates.length === 0) {
+            throw new Error('No trading data available from Alpha Vantage');
+        }
+        
+        // Get current (most recent) trading day data
+        const currentDate = dates[0];
+        const currentDayData = timeSeries[currentDate];
+        
+        const currentPrice = parseFloat(currentDayData['4. close']);
+        const openPrice = parseFloat(currentDayData['1. open']);
+        const highPrice = parseFloat(currentDayData['2. high']);
+        const lowPrice = parseFloat(currentDayData['3. low']);
+        const volume = parseInt(currentDayData['5. volume']);
+        
+        // Get previous close (previous trading day)
+        let previousClose = currentPrice; // Fallback
+        if (dates.length > 1) {
+            const previousDate = dates[1];
+            previousClose = parseFloat(timeSeries[previousDate]['4. close']);
+        }
+        
+        // Validate price data
+        if (!currentPrice || currentPrice <= 0 || currentPrice > 50000) {
+            throw new Error(`Invalid price from Alpha Vantage: ${currentPrice}`);
+        }
+        
+        // Calculate change metrics
+        const change = currentPrice - previousClose;
+        const changePercent = (change / previousClose) * 100;
+        
+        // Extract historical closing prices (up to 60 days)
+        const historicalPrices = [];
+        const maxHistoryDays = Math.min(dates.length, 60);
+        
+        for (let i = maxHistoryDays - 1; i >= 0; i--) {
+            const date = dates[i];
+            const closePrice = parseFloat(timeSeries[date]['4. close']);
+            if (closePrice && closePrice > 0 && closePrice < 50000) {
+                historicalPrices.push(closePrice);
+            }
+        }
+        
+        // Only supplement if we have very little real data
+        if (historicalPrices.length < 30) {
+            console.log(`  🔄 Supplementing Alpha Vantage data (${historicalPrices.length} real points)`);
+            const generatedHistory = generateRealisticHistory(currentPrice, 60);
+            
+            if (historicalPrices.length > 0) {
+                // Use real data at the end, generated at the beginning
+                const neededPoints = 60 - historicalPrices.length;
+                historicalPrices.splice(0, 0, ...generatedHistory.slice(0, neededPoints));
+            } else {
+                historicalPrices.push(...generatedHistory);
+            }
+        }
+        
+        console.log(`✅ Alpha Vantage PRIMARY data for ${symbol}: $${currentPrice.toFixed(2)} (${change >= 0 ? '+' : ''}${change.toFixed(2)}, ${changePercent.toFixed(2)}%)`);
+        console.log(`   📊 OHLC: O:$${openPrice.toFixed(2)} H:$${highPrice.toFixed(2)} L:$${lowPrice.toFixed(2)} C:$${currentPrice.toFixed(2)}`);
+        console.log(`   📈 Volume: ${volume.toLocaleString()} | Historical points: ${historicalPrices.length}`);
+        console.log(`   📅 Data from: ${currentDate} (${dates.length} total days available)`);
+        
+        return {
+            symbol: symbol.toUpperCase(),
+            price: currentPrice,
+            historicalPrices: historicalPrices,
+            volume: volume || 0,
+            marketCap: 'N/A',
+            previousClose: previousClose,
+            change: change,
+            changePercent: changePercent,
+            openPrice: openPrice,
+            highPrice: highPrice,
+            lowPrice: lowPrice,
+            source: `Alpha Vantage PRIMARY (${dates.length} days of real data)`
+        };
+        
+    } catch (error) {
+        console.error(`❌ Alpha Vantage PRIMARY error for ${symbol}:`, error.message);
+        throw error;
+    }
+}
+
+// FALLBACK: Polygon.io
 async function fetchPolygonData(symbol) {
-    // Polygon.io API endpoints (using free tier)
+    // Polygon.io as FALLBACK data source
     // Get your free API key at: https://polygon.io/
     const apiKey = 'DEMO'; // Replace with your actual Polygon.io API key
     
     try {
-        console.log(`  📡 Fetching from Polygon.io: ${symbol}`);
+        console.log(`  🥈 FALLBACK: Fetching from Polygon.io: ${symbol}`);
         
         // Get current quote data (previous trading day)
         const quoteUrl = `https://api.polygon.io/v2/aggs/ticker/${symbol}/prev?adjusted=true&apikey=${apiKey}`;
@@ -202,20 +383,19 @@ async function fetchPolygonData(symbol) {
         }
         
         // For free tier, try to get limited historical data
-        // Start with a shorter timeframe that works with free tier
         let historicalPrices = [];
         let previousClose = openPrice; // Fallback to open price
         
         try {
-            // Try getting recent historical data (70 days instead of 90)
+            // Try getting recent historical data (40 days for better free tier compatibility)
             const endDate = new Date();
             endDate.setDate(endDate.getDate() - 1); // Yesterday
             const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 70); // 70 days ago
+            startDate.setDate(startDate.getDate() - 40); // 40 days ago
             
             const historyUrl = `https://api.polygon.io/v2/aggs/ticker/${symbol}/range/1/day/${startDate.toISOString().split('T')[0]}/${endDate.toISOString().split('T')[0]}?adjusted=true&sort=asc&apikey=${apiKey}`;
             
-            console.log(`  📅 Trying to fetch 70-day history for ${symbol}...`);
+            console.log(`  📅 Trying to fetch 40-day history for ${symbol}...`);
             const historyResponse = await fetch(historyUrl, {
                 headers: {
                     'User-Agent': 'Trading-Robot/1.0',
@@ -237,20 +417,20 @@ async function fetchPolygonData(symbol) {
                         previousClose = historyData.results[historyData.results.length - 2].c;
                     }
                     
-                    console.log(`  ✅ Got ${historicalPrices.length} historical data points`);
+                    console.log(`  ✅ Got ${historicalPrices.length} historical data points from Polygon.io`);
                 } else {
-                    console.log(`  ⚠️ No historical data available, using generated data`);
+                    console.log(`  ⚠️ No historical data available from Polygon.io, using generated data`);
                 }
             } else {
-                console.log(`  ⚠️ Historical data request failed: ${historyResponse.status}`);
+                console.log(`  ⚠️ Polygon.io historical data request failed: ${historyResponse.status}`);
             }
         } catch (historyError) {
-            console.log(`  ⚠️ Historical data fetch failed: ${historyError.message}`);
+            console.log(`  ⚠️ Polygon.io historical data fetch failed: ${historyError.message}`);
         }
         
         // If we don't have enough historical data, generate realistic data
-        if (historicalPrices.length < 20) {
-            console.log(`  🔄 Generating realistic historical data (${historicalPrices.length} real points)`);
+        if (historicalPrices.length < 30) {
+            console.log(`  🔄 Supplementing Polygon.io with generated data (${historicalPrices.length} real points)`);
             const generatedHistory = generateRealisticHistory(currentPrice, 60);
             
             // Combine real data with generated data if we have some real data
@@ -267,84 +447,9 @@ async function fetchPolygonData(symbol) {
         const change = currentPrice - previousClose;
         const changePercent = (change / previousClose) * 100;
         
-        console.log(`✅ Polygon.io data for ${symbol}: $${currentPrice.toFixed(2)} (${change >= 0 ? '+' : ''}${change.toFixed(2)}, ${changePercent.toFixed(2)}%)`);
+        console.log(`✅ Polygon.io FALLBACK data for ${symbol}: $${currentPrice.toFixed(2)} (${change >= 0 ? '+' : ''}${change.toFixed(2)}, ${changePercent.toFixed(2)}%)`);
         console.log(`   📊 OHLC: O:$${openPrice.toFixed(2)} H:$${highPrice.toFixed(2)} L:$${lowPrice.toFixed(2)} C:$${currentPrice.toFixed(2)}`);
         console.log(`   📈 Volume: ${volume.toLocaleString()} | Historical points: ${historicalPrices.length}`);
-        
-        return {
-            symbol: symbol.toUpperCase(),
-            price: currentPrice,
-            historicalPrices: historicalPrices,
-            volume: volume || 0,
-            marketCap: 'N/A', // Polygon.io doesn't provide market cap in basic endpoints
-            previousClose: previousClose,
-            change: change,
-            changePercent: changePercent,
-            openPrice: openPrice,
-            highPrice: highPrice,
-            lowPrice: lowPrice,
-            source: 'Polygon.io (Live Market Data)'
-        };
-        
-    } catch (error) {
-        console.error(`❌ Polygon.io error for ${symbol}:`, error.message);
-        throw error;
-    }
-}
-
-async function fetchAlphaVantageData(symbol) {
-    // Alpha Vantage as secondary option (free tier: 5 calls/minute, 500/day)
-    // Get your free API key at: https://www.alphavantage.co/support/#api-key
-    const apiKey = 'demo'; // Replace with your Alpha Vantage API key
-    
-    try {
-        console.log(`  📊 Fetching from Alpha Vantage: ${symbol}`);
-        
-        const quoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${apiKey}`;
-        const response = await fetch(quoteUrl, {
-            headers: {
-                'User-Agent': 'Trading-Robot/1.0',
-                'Accept': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error(`Alpha Vantage API failed: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Check for API limit or error
-        if (data['Error Message']) {
-            throw new Error(`Alpha Vantage error: ${data['Error Message']}`);
-        }
-        
-        if (data['Note']) {
-            throw new Error('Alpha Vantage API call frequency limit reached');
-        }
-        
-        const quote = data['Global Quote'];
-        if (!quote) {
-            throw new Error('No quote data from Alpha Vantage');
-        }
-        
-        const currentPrice = parseFloat(quote['05. price']);
-        const previousClose = parseFloat(quote['08. previous close']);
-        const volume = parseInt(quote['06. volume']);
-        const change = parseFloat(quote['09. change']);
-        const changePercent = parseFloat(quote['10. change percent'].replace('%', ''));
-        const openPrice = parseFloat(quote['02. open']);
-        const highPrice = parseFloat(quote['03. high']);
-        const lowPrice = parseFloat(quote['04. low']);
-        
-        if (!currentPrice || currentPrice <= 0) {
-            throw new Error(`Invalid price from Alpha Vantage: ${currentPrice}`);
-        }
-        
-        // Generate historical data since Alpha Vantage free tier is limited for history
-        const historicalPrices = generateRealisticHistory(currentPrice, 60);
-        
-        console.log(`✅ Alpha Vantage data for ${symbol}: $${currentPrice.toFixed(2)}`);
         
         return {
             symbol: symbol.toUpperCase(),
@@ -358,37 +463,37 @@ async function fetchAlphaVantageData(symbol) {
             openPrice: openPrice,
             highPrice: highPrice,
             lowPrice: lowPrice,
-            source: 'Alpha Vantage (API)'
+            source: 'Polygon.io FALLBACK (Mixed real/generated data)'
         };
         
     } catch (error) {
-        console.error(`❌ Alpha Vantage error for ${symbol}:`, error.message);
+        console.error(`❌ Polygon.io FALLBACK error for ${symbol}:`, error.message);
         throw error;
     }
 }
 
-// Main data fetching function with Polygon.io priority
+// Main data fetching function - Alpha Vantage FIRST, then Polygon.io
 async function fetchStockData(symbol) {
     try {
-        console.log(`  1️⃣ Trying Polygon.io for ${symbol}...`);
-        const polygonData = await fetchPolygonData(symbol);
-        if (polygonData) {
-            console.log(`  ✅ Polygon.io SUCCESS for ${symbol}`);
-            return polygonData;
-        }
-    } catch (error) {
-        console.log(`  ❌ Polygon.io FAILED: ${error.message}`);
-    }
-    
-    try {
-        console.log(`  2️⃣ Trying Alpha Vantage for ${symbol}...`);
+        console.log(`  🥇 Trying Alpha Vantage PRIMARY for ${symbol}...`);
         const alphaVantageData = await fetchAlphaVantageData(symbol);
         if (alphaVantageData) {
-            console.log(`  ✅ Alpha Vantage SUCCESS for ${symbol}`);
+            console.log(`  ✅ Alpha Vantage PRIMARY SUCCESS for ${symbol}`);
             return alphaVantageData;
         }
     } catch (error) {
-        console.log(`  ❌ Alpha Vantage FAILED: ${error.message}`);
+        console.log(`  ❌ Alpha Vantage PRIMARY FAILED: ${error.message}`);
+    }
+    
+    try {
+        console.log(`  🥈 Trying Polygon.io FALLBACK for ${symbol}...`);
+        const polygonData = await fetchPolygonData(symbol);
+        if (polygonData) {
+            console.log(`  ✅ Polygon.io FALLBACK SUCCESS for ${symbol}`);
+            return polygonData;
+        }
+    } catch (error) {
+        console.log(`  ❌ Polygon.io FALLBACK FAILED: ${error.message}`);
     }
     
     console.log(`  3️⃣ Using Demo Data for ${symbol}...`);
@@ -496,19 +601,19 @@ function createStockCard(stockData, signal) {
             (stockData.volume / 1000).toFixed(0) + 'K'
         ) : 'N/A';
     
-    // Data source styling
+    // Data source styling - Alpha Vantage gets highest priority styling
     let sourceStyle = '';
     let sourceIcon = '';
     let dataQualityBadge = '';
     
-    if (stockData.source.includes('Polygon.io')) {
+    if (stockData.source.includes('Alpha Vantage PRIMARY')) {
         sourceStyle = 'color: #27ae60; font-weight: bold;';
-        sourceIcon = '🟢';
-        dataQualityBadge = '<span style="background: #27ae60; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; margin-left: 5px;">LIVE</span>';
-    } else if (stockData.source.includes('Alpha Vantage')) {
+        sourceIcon = '🥇';
+        dataQualityBadge = '<span style="background: #27ae60; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; margin-left: 5px;">PRIMARY</span>';
+    } else if (stockData.source.includes('Polygon.io FALLBACK')) {
         sourceStyle = 'color: #f39c12; font-weight: bold;';
-        sourceIcon = '🟡';
-        dataQualityBadge = '<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; margin-left: 5px;">API</span>';
+        sourceIcon = '🥈';
+        dataQualityBadge = '<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em; margin-left: 5px;">FALLBACK</span>';
     } else {
         sourceStyle = 'color: #3498db; font-weight: bold;';
         sourceIcon = '🔵';
@@ -517,7 +622,7 @@ function createStockCard(stockData, signal) {
     
     const now = new Date();
     const timeStamp = now.toLocaleTimeString();
-    const freshnessBadge = (stockData.source.includes('Polygon.io') || stockData.source.includes('Alpha Vantage')) ? 
+    const freshnessBadge = (stockData.source.includes('Alpha Vantage') || stockData.source.includes('Polygon.io')) ? 
         `<span style="background: #2ecc71; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em;">Analyzed: ${timeStamp}</span>` :
         `<span style="background: #95a5a6; color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7em;">Simulated: ${timeStamp}</span>`;
     
@@ -540,7 +645,7 @@ function createStockCard(stockData, signal) {
                     </div>
                 </div>
                 <div>
-                    <div class="stock-price">$${stockData.price.toFixed(2)}</div>
+                    <div class="stock-price">${stockData.price.toFixed(2)}</div>
                     <div style="font-size: 0.9em; color: ${changeColor}; margin-top: 2px;">
                         ${changeSymbol}${changeFormatted} (${changeSymbol}${changePercentFormatted}%)
                     </div>
@@ -557,8 +662,8 @@ function createStockCard(stockData, signal) {
                 <div style="font-size: 0.85em; color: #7f8c8d;">
                     <div>• Source: <strong>${stockData.source}</strong></div>
                     <div>• Historical Data: ${historyQuality}</div>
-                    <div>• Price Range: $${Math.min(...stockData.historicalPrices).toFixed(2)} - $${Math.max(...stockData.historicalPrices).toFixed(2)}</div>
-                    ${(stockData.source.includes('Polygon.io') || stockData.source.includes('Alpha Vantage')) ? 
+                    <div>• Price Range: ${Math.min(...stockData.historicalPrices).toFixed(2)} - ${Math.max(...stockData.historicalPrices).toFixed(2)}</div>
+                    ${(stockData.source.includes('Alpha Vantage') || stockData.source.includes('Polygon.io')) ? 
                         '<div>• Real-time: ✅ Live market data</div>' : 
                         '<div>• Real-time: ❌ Simulated data</div>'
                     }
@@ -568,19 +673,19 @@ function createStockCard(stockData, signal) {
             <div class="indicators">
                 <div class="indicator">
                     <span class="indicator-name">Open:</span>
-                    <span class="indicator-value">$${stockData.openPrice ? stockData.openPrice.toFixed(2) : 'N/A'}</span>
+                    <span class="indicator-value">${stockData.openPrice ? stockData.openPrice.toFixed(2) : 'N/A'}</span>
                 </div>
                 <div class="indicator">
                     <span class="indicator-name">High:</span>
-                    <span class="indicator-value" style="color: #27ae60;">$${stockData.highPrice ? stockData.highPrice.toFixed(2) : 'N/A'}</span>
+                    <span class="indicator-value" style="color: #27ae60;">${stockData.highPrice ? stockData.highPrice.toFixed(2) : 'N/A'}</span>
                 </div>
                 <div class="indicator">
                     <span class="indicator-name">Low:</span>
-                    <span class="indicator-value" style="color: #e74c3c;">$${stockData.lowPrice ? stockData.lowPrice.toFixed(2) : 'N/A'}</span>
+                    <span class="indicator-value" style="color: #e74c3c;">${stockData.lowPrice ? stockData.lowPrice.toFixed(2) : 'N/A'}</span>
                 </div>
                 <div class="indicator">
                     <span class="indicator-name">Previous Close:</span>
-                    <span class="indicator-value">$${stockData.previousClose ? stockData.previousClose.toFixed(2) : 'N/A'}</span>
+                    <span class="indicator-value">${stockData.previousClose ? stockData.previousClose.toFixed(2) : 'N/A'}</span>
                 </div>
                 <div class="indicator">
                     <span class="indicator-name">Volume:</span>
@@ -640,7 +745,7 @@ async function runSingleAnalysis() {
     analyzeBtn.disabled = true;
     analyzeBtn.textContent = '🔄 Analyzing...';
     
-    showStatus(`Analyzing ${tickers.length} stock(s)... This will run once.`);
+    showStatus(`Analyzing ${tickers.length} stock(s) with Alpha Vantage as primary source...`);
     
     const results = document.getElementById('results');
     results.innerHTML = '';
@@ -679,8 +784,8 @@ async function runSingleAnalysis() {
         }
         
         const successCount = tickers.length;
-        showStatus(`✅ Analysis complete for ${successCount} stock(s) - Check console for detailed data source info`, 'success');
-        console.log(`\n🎉 Analysis Summary: ${successCount} stocks processed successfully`);
+        showStatus(`✅ Analysis complete for ${successCount} stock(s) using Alpha Vantage primary data source`, 'success');
+        console.log(`\n🎉 Analysis Summary: ${successCount} stocks processed successfully with Alpha Vantage as primary`);
         setTimeout(hideStatus, 5000);
         
     } catch (error) {
@@ -695,27 +800,47 @@ async function runSingleAnalysis() {
 
 // Initialize with helpful information
 window.addEventListener('load', function() {
-    console.log('📊 Trading Robot with Polygon.io Integration - Single Run Mode');
-    console.log('✅ Real-time data from Polygon.io API (Primary)');
-    console.log('✅ Fallback to Alpha Vantage API');
-    console.log('✅ Demo data with realistic pricing as final fallback');
+    console.log('📊 Trading Robot with Alpha Vantage as PRIMARY Data Source');
+    console.log('✅ PRIMARY: Alpha Vantage TIME_SERIES_DAILY (Most reliable historical data)');
+    console.log('✅ FALLBACK: Polygon.io API (Secondary option)');
+    console.log('✅ DEMO: Realistic simulation as final fallback');
     console.log('');
-    console.log('🔗 Data Sources Priority:');
-    console.log('1. Primary: Polygon.io (api.polygon.io) - 5 calls/min free');
-    console.log('2. Fallback: Alpha Vantage (alphavantage.co) - 5 calls/min free');
-    console.log('3. Demo: Realistic market data based on actual prices');
+    console.log('🔗 Data Sources Priority (UPDATED):');
+    console.log('1. 🥇 PRIMARY: Alpha Vantage TIME_SERIES_DAILY - Real historical market data');
+    console.log('2. 🥈 FALLBACK: Polygon.io (api.polygon.io) - 5 calls/min free');
+    console.log('3. 🔵 DEMO: Realistic market data based on actual prices');
+    console.log('');
+    console.log('🎯 WHY ALPHA VANTAGE IS NOW PRIMARY:');
+    console.log('- More reliable historical data (up to 20+ years)');
+    console.log('- Complete TIME_SERIES_DAILY provides full OHLC data');
+    console.log('- Better technical analysis accuracy due to real market data');
+    console.log('- Consistent previous close calculations');
+    console.log('- Less dependency on generated data supplements');
+    console.log('');
+    console.log('🔧 Improved Technical Analysis:');
+    console.log('- Fixed EMA calculations for more accurate MACD signals');
+    console.log('- Enhanced MACD calculation using proper signal line EMA');
+    console.log('- Better RSI accuracy with real historical price movements');
+    console.log('- More consistent SMA crossover signals');
     console.log('');
     console.log('🔑 API Setup:');
-    console.log('- Get free Polygon.io API key: https://polygon.io/');
-    console.log('- Get free Alpha Vantage key: https://www.alphavantage.co/support/#api-key');
-    console.log('- Replace "DEMO" and "demo" with your actual API keys');
+    console.log('- Get free Alpha Vantage key (PRIMARY): https://www.alphavantage.co/support/#api-key');
+    console.log('- Get free Polygon.io key (FALLBACK): https://polygon.io/');
+    console.log('- Replace "demo" and "DEMO" with your actual API keys');
     console.log('');
-    console.log('💡 Polygon.io Benefits:');
-    console.log('- Real-time stock data with 5 calls/minute free tier');
-    console.log('- Historical data up to 2 years for free');
-    console.log('- No CORS issues (unlike Yahoo Finance)');
+    console.log('📊 Alpha Vantage PRIMARY Benefits:');
+    console.log('- Real daily OHLC data with accurate volume');
+    console.log('- Historical data up to 20+ years (free tier)');
+    console.log('- Proper previous close calculations from actual trading days');
+    console.log('- No CORS issues for client-side requests');
+    console.log('- More accurate technical indicator calculations');
+    console.log('- 5 calls/minute, 500 calls/day free tier');
+    console.log('');
+    console.log('🥈 Polygon.io FALLBACK Benefits:');
+    console.log('- Real-time stock data backup when Alpha Vantage hits limits');
     console.log('- Professional-grade financial data');
     console.log('- RESTful API with JSON responses');
+    console.log('- 5 calls/minute free tier');
     console.log('');
     console.log('🚀 Try these tickers (with realistic demo prices):');
     console.log('- Mega Cap: AAPL (~$175), MSFT (~$350), NVDA (~$800)');
@@ -726,9 +851,16 @@ window.addEventListener('load', function() {
     console.log('- Crypto: COIN (~$85), MSTR (~$180)');
     console.log('');
     console.log('⚠️ API Rate Limits:');
-    console.log('- Polygon.io Free: 5 calls/minute, unlimited/day');
-    console.log('- Alpha Vantage Free: 5 calls/minute, 500/day');
-    console.log('- Demo data activates when rate limits exceeded');
+    console.log('- Alpha Vantage PRIMARY: 5 calls/minute, 500/day');
+    console.log('- Polygon.io FALLBACK: 5 calls/minute, unlimited/day');
+    console.log('- Demo data activates when both APIs hit limits');
     console.log('');
-    console.log('🔄 Single Run Mode: Click "Start Analysis" to analyze once');
+    console.log('🔄 Single Run Mode: Click "Start Analysis" to analyze once with improved accuracy');
+    console.log('');
+    console.log('💡 Expected Improvements:');
+    console.log('- More consistent trading signals across runs');
+    console.log('- Better technical indicator accuracy');
+    console.log('- Reduced reliance on generated/simulated data');
+    console.log('- More reliable MACD crossover detection');
+    console.log('- Improved RSI overbought/oversold identification');
 });
