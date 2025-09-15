@@ -1,4 +1,4 @@
-// detailed-view.js - Detailed Stock Analysis with Charts and Multiple Timeframes
+// detailed-view.js - Enhanced Detailed Stock Analysis with TwelveData for Both Daily and Intraday
 
 // Technical Analysis Functions (same as main page)
 function calculateSMA(prices, period) {
@@ -193,101 +193,70 @@ function switchTab(tabName) {
     }
 }
 
-// Alpha Vantage data fetching (same as main page)
-async function fetchAlphaVantageData(symbol) {
-    const apiKey = 'demo'; // Replace with your Alpha Vantage API key
+// TwelveData API for Daily Data (NEW - replacing Alpha Vantage for detailed view)
+async function fetchTwelveDataDaily(symbol) {
+    // Replace 'demo' with your actual TwelveData API key
+    // Get free API key at: https://twelvedata.com/
+    const apiKey = 'demo'; 
     
     try {
-        console.log(`Fetching Alpha Vantage data for ${symbol}...`);
+        console.log(`Fetching TwelveData daily data for ${symbol}...`);
         
-        const dailyUrl = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${apiKey}`;
+        const dailyUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=60&apikey=${apiKey}`;
         const response = await fetch(dailyUrl);
         
         if (!response.ok) {
-            throw new Error(`Alpha Vantage API failed: ${response.status}`);
+            throw new Error(`TwelveData API failed: ${response.status}`);
         }
         
         const data = await response.json();
         
-        if (data['Error Message']) {
-            throw new Error(`Alpha Vantage error: ${data['Error Message']}`);
+        if (data.status === 'error') {
+            throw new Error(`TwelveData error: ${data.message}`);
         }
         
-        if (data['Note']) {
-            throw new Error('Alpha Vantage API call frequency limit reached');
+        if (!data.values || data.values.length === 0) {
+            throw new Error('No daily data from TwelveData');
         }
         
-        const timeSeries = data['Time Series (Daily)'];
-        if (!timeSeries) {
-            throw new Error('No time series data from Alpha Vantage');
-        }
+        // Process the data
+        const timeSeriesData = data.values.reverse(); // Most recent first
+        const historicalData = timeSeriesData.map(item => ({
+            date: item.datetime,
+            open: parseFloat(item.open),
+            high: parseFloat(item.high),
+            low: parseFloat(item.low),
+            close: parseFloat(item.close),
+            volume: parseInt(item.volume || 0)
+        }));
         
-        const dates = Object.keys(timeSeries).sort((a, b) => new Date(b) - new Date(a));
-        
-        if (dates.length === 0) {
-            throw new Error('No trading data available from Alpha Vantage');
-        }
-        
-        const currentDate = dates[0];
-        const currentDayData = timeSeries[currentDate];
-        
-        const currentPrice = parseFloat(currentDayData['4. close']);
-        const openPrice = parseFloat(currentDayData['1. open']);
-        const highPrice = parseFloat(currentDayData['2. high']);
-        const lowPrice = parseFloat(currentDayData['3. low']);
-        const volume = parseInt(currentDayData['5. volume']);
-        
-        let previousClose = currentPrice;
-        if (dates.length > 1) {
-            const previousDate = dates[1];
-            previousClose = parseFloat(timeSeries[previousDate]['4. close']);
-        }
-        
-        if (!currentPrice || currentPrice <= 0 || currentPrice > 50000) {
-            throw new Error(`Invalid price from Alpha Vantage: ${currentPrice}`);
-        }
-        
-        const change = currentPrice - previousClose;
-        const changePercent = (change / previousClose) * 100;
-        
-        // Get historical data for chart and analysis
-        const historicalData = [];
-        const maxHistoryDays = Math.min(dates.length, 60);
-        
-        for (let i = maxHistoryDays - 1; i >= 0; i--) {
-            const date = dates[i];
-            const dayData = timeSeries[date];
-            historicalData.push({
-                date: date,
-                open: parseFloat(dayData['1. open']),
-                high: parseFloat(dayData['2. high']),
-                low: parseFloat(dayData['3. low']),
-                close: parseFloat(dayData['4. close']),
-                volume: parseInt(dayData['5. volume'])
-            });
-        }
+        const currentPrice = historicalData[historicalData.length - 1].close;
+        const previousPrice = historicalData.length > 1 ? historicalData[historicalData.length - 2].close : currentPrice;
+        const change = currentPrice - previousPrice;
+        const changePercent = (change / previousPrice) * 100;
         
         const historicalPrices = historicalData.map(d => d.close);
+        const totalVolume = historicalData.reduce((sum, d) => sum + d.volume, 0);
         
-        console.log(`✅ Alpha Vantage data for ${symbol}: $${currentPrice.toFixed(2)}`);
+        console.log(`✅ TwelveData daily data for ${symbol}: $${currentPrice.toFixed(2)}`);
         
         return {
             symbol: symbol.toUpperCase(),
             price: currentPrice,
             historicalPrices: historicalPrices,
             historicalData: historicalData,
-            volume: volume || 0,
-            previousClose: previousClose,
+            volume: totalVolume,
+            previousClose: previousPrice,
             change: change,
             changePercent: changePercent,
-            openPrice: openPrice,
-            highPrice: highPrice,
-            lowPrice: lowPrice,
-            source: `Alpha Vantage PRIMARY (${dates.length} days of real data)`
+            openPrice: historicalData[historicalData.length - 1].open,
+            highPrice: historicalData[historicalData.length - 1].high,
+            lowPrice: historicalData[historicalData.length - 1].low,
+            source: `TwelveData Daily (${historicalData.length} days)`
         };
         
     } catch (error) {
-        console.error(`❌ Alpha Vantage error for ${symbol}:`, error.message);
+        console.error(`❌ TwelveData daily error for ${symbol}:`, error.message);
         throw error;
     }
 }
@@ -355,57 +324,13 @@ async function fetchTwelveDataIntraday(symbol) {
         };
         
     } catch (error) {
-        console.error(`❌ TwelveData error for ${symbol}:`, error.message);
-        
-        // Generate realistic intraday data as fallback
-        const basePrice = 100 + Math.random() * 200; // Random base price
-        const historicalData = [];
-        const historicalPrices = [];
-        
-        for (let i = 78; i > 0; i--) {
-            const time = new Date();
-            time.setMinutes(time.getMinutes() - (i * 30));
-            
-            const volatility = 0.005; // 0.5% volatility per 30min
-            const change = (Math.random() - 0.5) * 2 * volatility * basePrice;
-            const price = Math.max(basePrice + change, basePrice * 0.8);
-            
-            historicalData.push({
-                datetime: time.toISOString(),
-                close: price,
-                open: price * (0.999 + Math.random() * 0.002),
-                high: price * (1.001 + Math.random() * 0.002),
-                low: price * (0.999 - Math.random() * 0.002),
-                volume: Math.floor(Math.random() * 100000)
-            });
-            historicalPrices.push(price);
-        }
-        
-        const currentPrice = historicalData[historicalData.length - 1].close;
-        const previousPrice = historicalData[historicalData.length - 2].close;
-        const change = currentPrice - previousPrice;
-        const changePercent = (change / previousPrice) * 100;
-        const avgVolume = historicalData.reduce((sum, d) => sum + d.volume, 0) / historicalData.length;
-        
-        return {
-            symbol: symbol.toUpperCase(),
-            price: currentPrice,
-            historicalPrices: historicalPrices,
-            historicalData: historicalData,
-            volume: avgVolume,
-            previousClose: previousPrice,
-            change: change,
-            changePercent: changePercent,
-            openPrice: historicalData[historicalData.length - 1].open,
-            highPrice: Math.max(...historicalData.slice(-1).map(d => d.high)),
-            lowPrice: Math.min(...historicalData.slice(-1).map(d => d.low)),
-            source: `Demo 30min Data (Simulated)`
-        };
+        console.error(`❌ TwelveData intraday error for ${symbol}:`, error.message);
+        throw error;
     }
 }
 
-// Demo data generator for daily data
-function generateDemoData(symbol) {
+// Demo data generator for fallback
+function generateDemoData(symbol, interval = 'daily') {
     const realisticPrices = {
         'AAPL': 175, 'GOOGL': 130, 'MSFT': 350, 'TSLA': 200, 'NVDA': 800,
         'AMZN': 145, 'META': 300, 'NFLX': 450, 'WBD': 12.26, 'DIS': 95,
@@ -424,25 +349,39 @@ function generateDemoData(symbol) {
     const historicalPrices = [];
     let price = currentPrice;
     
-    for (let i = 60; i > 0; i--) {
+    const dataPoints = interval === 'daily' ? 60 : 78;
+    const timeIncrement = interval === 'daily' ? 24 * 60 * 60 * 1000 : 30 * 60 * 1000; // 1 day or 30 minutes
+    
+    for (let i = dataPoints; i > 0; i--) {
         const date = new Date();
-        date.setDate(date.getDate() - i);
+        if (interval === 'daily') {
+            date.setDate(date.getDate() - i);
+        } else {
+            date.setMinutes(date.getMinutes() - (i * 30));
+        }
         
-        const volatility = 0.02;
+        const volatility = interval === 'daily' ? 0.02 : 0.005;
         const randomWalk = (Math.random() - 0.5) * 2;
         const meanReversion = (currentPrice - price) * 0.001;
         const priceChange = (randomWalk * volatility + meanReversion) * price;
         
         price = Math.max(price + priceChange, currentPrice * 0.3);
         
-        historicalData.push({
-            date: date.toISOString().split('T')[0],
-            open: price * (0.99 + Math.random() * 0.02),
-            high: price * (1.01 + Math.random() * 0.02),
-            low: price * (0.97 + Math.random() * 0.02),
+        const dataPoint = {
             close: price,
-            volume: Math.floor(Math.random() * 50000000) + 1000000
-        });
+            open: price * (0.999 + Math.random() * 0.002),
+            high: price * (1.001 + Math.random() * 0.002),
+            low: price * (0.999 - Math.random() * 0.002),
+            volume: Math.floor(Math.random() * 100000)
+        };
+        
+        if (interval === 'daily') {
+            dataPoint.date = date.toISOString().split('T')[0];
+        } else {
+            dataPoint.datetime = date.toISOString();
+        }
+        
+        historicalData.push(dataPoint);
         historicalPrices.push(price);
     }
     
@@ -458,7 +397,7 @@ function generateDemoData(symbol) {
         openPrice: currentPrice * (0.99 + Math.random() * 0.02),
         highPrice: currentPrice * (1.01 + Math.random() * 0.02),
         lowPrice: currentPrice * (0.97 + Math.random() * 0.02),
-        source: 'Demo Data (Realistic Pricing)'
+        source: `Demo ${interval} Data (Simulated)`
     };
 }
 
@@ -586,7 +525,7 @@ function updateUI(data, signal, prefix) {
     
     // Update header
     document.getElementById(`${prefix}-symbol`).textContent = data.symbol;
-    document.getElementById(`${prefix}-price`).textContent = `$${data.price.toFixed(2)}`;
+    document.getElementById(`${prefix}-price`).textContent = `${data.price.toFixed(2)}`;
     document.getElementById(`${prefix}-change`).innerHTML = `
         <div style="font-size: 0.9em; color: ${changeColor}; margin-top: 5px;">
             ${changeSymbol}${changeFormatted} (${changeSymbol}${changePercentFormatted}%)
@@ -595,10 +534,8 @@ function updateUI(data, signal, prefix) {
     
     // Update source info
     let sourceBadge = '';
-    if (data.source.includes('Alpha Vantage') || data.source.includes('TwelveData')) {
+    if (data.source.includes('TwelveData')) {
         sourceBadge = '<span class="data-source-badge primary-source">🥇 PRIMARY</span>';
-    } else if (data.source.includes('Polygon')) {
-        sourceBadge = '<span class="data-source-badge fallback-source">🥈 FALLBACK</span>';
     } else {
         sourceBadge = '<span class="data-source-badge demo-source">🔵 DEMO</span>';
     }
@@ -622,10 +559,10 @@ function updateUI(data, signal, prefix) {
     document.getElementById(`${prefix}-macd`).textContent = macd ? macd.macd.toFixed(4) : 'N/A';
     document.getElementById(`${prefix}-macd`).style.color = macd ? (macd.macd > macd.signal ? '#27ae60' : '#e74c3c') : '#2c3e50';
     
-    document.getElementById(`${prefix}-sma20`).textContent = sma20 ? `$${sma20.toFixed(2)}` : 'N/A';
+    document.getElementById(`${prefix}-sma20`).textContent = sma20 ? `${sma20.toFixed(2)}` : 'N/A';
     document.getElementById(`${prefix}-sma20`).style.color = sma20 ? (data.price > sma20 ? '#27ae60' : '#e74c3c') : '#2c3e50';
     
-    document.getElementById(`${prefix}-sma50`).textContent = sma50 ? `$${sma50.toFixed(2)}` : 'N/A';
+    document.getElementById(`${prefix}-sma50`).textContent = sma50 ? `${sma50.toFixed(2)}` : 'N/A';
     document.getElementById(`${prefix}-sma50`).style.color = sma50 ? (data.price > sma50 ? '#27ae60' : '#e74c3c') : '#2c3e50';
     
     const volumeFormatted = data.volume ? 
@@ -636,7 +573,7 @@ function updateUI(data, signal, prefix) {
     document.getElementById(`${prefix}-volume`).textContent = volumeFormatted;
     
     document.getElementById(`${prefix}-range`).textContent = 
-        `$${data.lowPrice.toFixed(2)} - $${data.highPrice.toFixed(2)}`;
+        `${data.lowPrice.toFixed(2)} - ${data.highPrice.toFixed(2)}`;
     
     // Update signal
     const confidencePercentage = Math.round(signal.confidence * 100);
@@ -648,7 +585,7 @@ function updateUI(data, signal, prefix) {
     const analysisDiv = document.getElementById(`${prefix}-analysis`);
     analysisDiv.innerHTML = `
         <div style="margin-bottom: 15px;">
-            <strong>Recommendation:</strong> ${signal.action.toUpperCase()} at $${signal.targetPrice.toFixed(2)}
+            <strong>Recommendation:</strong> ${signal.action.toUpperCase()} at ${signal.targetPrice.toFixed(2)}
         </div>
         <div style="margin-bottom: 15px;">
             <strong>Analysis:</strong> ${signal.reasons.join(', ')}
@@ -658,20 +595,20 @@ function updateUI(data, signal, prefix) {
             <ul style="margin-left: 20px; margin-top: 5px;">
                 <li>RSI (14): ${rsi ? rsi.toFixed(2) : 'N/A'} ${rsi ? (rsi > 70 ? '(Overbought)' : rsi < 30 ? '(Oversold)' : '(Neutral)') : ''}</li>
                 <li>MACD: ${macd ? macd.macd.toFixed(4) : 'N/A'} ${macd ? (macd.macd > macd.signal ? '(Bullish)' : '(Bearish)') : ''}</li>
-                <li>SMA20: $${sma20 ? sma20.toFixed(2) : 'N/A'} ${sma20 ? (data.price > sma20 ? '(Above)' : '(Below)') : ''}</li>
+                <li>SMA20: ${sma20 ? sma20.toFixed(2) : 'N/A'} ${sma20 ? (data.price > sma20 ? '(Above)' : '(Below)') : ''}</li>
                 <li>SMA50: ${sma50 ? sma50.toFixed(2) : 'N/A'} ${sma50 ? (data.price > sma50 ? '(Above)' : '(Below)') : ''}</li>
             </ul>
         </div>
         <div style="font-size: 0.85em; color: #7f8c8d; font-style: italic;">
             ${data.source.includes('Demo') ? 
                 '⚠️ Note: Analysis based on simulated data for demonstration purposes' : 
-                '✅ Analysis based on real market data'
+                '✅ Analysis based on real TwelveData market data'
             }
         </div>
     `;
 }
 
-// Load daily data
+// Load daily data using TwelveData
 async function loadDailyData(symbol) {
     try {
         document.getElementById('daily-loading').style.display = 'flex';
@@ -680,10 +617,10 @@ async function loadDailyData(symbol) {
         
         let data;
         try {
-            data = await fetchAlphaVantageData(symbol);
+            data = await fetchTwelveDataDaily(symbol);
         } catch (error) {
-            console.log('Alpha Vantage failed, using demo data');
-            data = generateDemoData(symbol);
+            console.log('TwelveData daily failed, using demo data');
+            data = generateDemoData(symbol, 'daily');
         }
         
         const signal = generateTradingSignal(data.symbol, data.price, data.historicalPrices);
@@ -705,14 +642,21 @@ async function loadDailyData(symbol) {
     }
 }
 
-// Load intraday data
+// Load intraday data using TwelveData
 async function loadIntradayData(symbol) {
     try {
         document.getElementById('intraday-loading').style.display = 'flex';
         document.getElementById('intraday-content').style.display = 'none';
         document.getElementById('intraday-error').style.display = 'none';
         
-        const data = await fetchTwelveDataIntraday(symbol);
+        let data;
+        try {
+            data = await fetchTwelveDataIntraday(symbol);
+        } catch (error) {
+            console.log('TwelveData intraday failed, using demo data');
+            data = generateDemoData(symbol, 'intraday');
+        }
+        
         const signal = generateTradingSignal(data.symbol, data.price, data.historicalPrices);
         
         // Create chart
@@ -745,19 +689,20 @@ window.addEventListener('load', function() {
     // Load daily data first
     loadDailyData(currentSymbol);
     
-    console.log('📊 Detailed Stock Analysis Page Loaded');
+    console.log('📊 Enhanced Detailed Stock Analysis Page Loaded');
     console.log(`🎯 Analyzing: ${currentSymbol}`);
-    console.log('📈 Daily Interval: Alpha Vantage PRIMARY data source');
+    console.log('📈 Daily Interval: TwelveData PRIMARY data source');
     console.log('⚡ 30-Minute Interval: TwelveData API');
     console.log('');
     console.log('🔑 API Setup:');
-    console.log('- Alpha Vantage (Daily): https://www.alphavantage.co/support/#api-key');
-    console.log('- TwelveData (30min): https://twelvedata.com/');
-    console.log('- Replace "demo" with your actual API keys for best results');
+    console.log('- TwelveData (Both intervals): https://twelvedata.com/');
+    console.log('- Replace "demo" with your actual API key for best results');
+    console.log('- Free tier: 8 calls/minute, 800 calls/day');
     console.log('');
     console.log('📊 Features:');
     console.log('- Interactive price charts with moving averages');
     console.log('- Real-time technical analysis calculations');
     console.log('- Comprehensive trading signals with confidence levels');
     console.log('- Multiple timeframe analysis (Daily vs 30-minute)');
+    console.log('- Enhanced data consistency using single API provider');
 });
