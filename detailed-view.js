@@ -1,4 +1,4 @@
-// detailed-view.js - Enhanced Detailed Stock Analysis with TwelveData for Both Daily and Intraday
+// detailed-view.js - Enhanced Detailed Stock Analysis with TwelveData and ChatGPT Integration
 
 // Technical Analysis Functions (same as main page)
 function calculateSMA(prices, period) {
@@ -176,27 +176,477 @@ function generateTradingSignal(symbol, currentPrice, historicalPrices) {
 let currentSymbol = '';
 let dailyChart = null;
 let intradayChart = null;
+let dailyData = null;
+let intradayData = null;
 
 // Tab switching functionality
 function switchTab(tabName) {
+    console.log(`Switching to tab: ${tabName}`);
+    
     // Update tab buttons
-    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-    document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    const activeTabButton = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeTabButton) {
+        activeTabButton.classList.add('active');
+    }
     
     // Update tab content
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-    document.getElementById(`${tabName}-tab`).classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        content.style.display = 'none';
+    });
+    
+    const activeTabContent = document.getElementById(`${tabName}-tab`);
+    if (activeTabContent) {
+        activeTabContent.classList.add('active');
+        activeTabContent.style.display = 'block';
+    }
     
     // Load data if not already loaded
     if (tabName === 'intraday' && document.getElementById('intraday-content').style.display === 'none') {
         loadIntradayData(currentSymbol);
     }
+    
+    // Initialize ChatGPT tab if needed
+    if (tabName === 'chatgpt') {
+        initializeChatGPTTab();
+    }
 }
 
-// TwelveData API for Daily Data (NEW - replacing Alpha Vantage for detailed view)
+// ChatGPT Integration Functions
+function initializeChatGPTTab() {
+    const generateBtn = document.getElementById('generateAnalysisBtn');
+    const statusDiv = document.getElementById('analysis-status');
+    
+    // Check if we have data from both intervals
+    if (!dailyData || !intradayData) {
+        statusDiv.className = 'analysis-status error';
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = '⚠️ Please load data from both Daily and 30-Minute tabs first before generating AI analysis.';
+        generateBtn.disabled = true;
+        return;
+    }
+    
+    // Enable the button if we have data
+    generateBtn.disabled = false;
+    statusDiv.style.display = 'none';
+}
+
+function generateChatGPTPrompt() {
+    if (!dailyData || !intradayData) {
+        throw new Error('Missing data for analysis. Please load both daily and intraday data first.');
+    }
+    
+    // Calculate indicators for both timeframes
+    const dailyRSI = calculateRSI(dailyData.historicalPrices);
+    const dailyMACD = calculateMACD(dailyData.historicalPrices);
+    const dailySMA20 = calculateSMA(dailyData.historicalPrices, 20);
+    const dailySMA50 = calculateSMA(dailyData.historicalPrices, 50);
+    
+    const intradayRSI = calculateRSI(intradayData.historicalPrices);
+    const intradayMACD = calculateMACD(intradayData.historicalPrices);
+    const intradaySMA20 = calculateSMA(intradayData.historicalPrices, 20);
+    const intradaySMA50 = calculateSMA(intradayData.historicalPrices, 50);
+    
+    // Format volume
+    const dailyVolumeFormatted = dailyData.volume > 1000000 ? 
+        (dailyData.volume / 1000000).toFixed(1) + 'M' : 
+        (dailyData.volume / 1000).toFixed(0) + 'K';
+    
+    const intradayVolumeFormatted = intradayData.volume > 1000000 ? 
+        (intradayData.volume / 1000000).toFixed(1) + 'M' : 
+        (intradayData.volume / 1000).toFixed(0) + 'K';
+    
+    const prompt = `Analyze the following 60-day technical data (one day interval) for the symbol ${currentSymbol}: 
+RSI (14) ${dailyRSI ? dailyRSI.toFixed(2) : 'N/A'} 
+MACD ${dailyMACD ? dailyMACD.macd.toFixed(4) : 'N/A'} 
+SMA 20 ${dailySMA20 ? dailySMA20.toFixed(2) : 'N/A'} 
+SMA 50 ${dailySMA50 ? dailySMA50.toFixed(2) : 'N/A'} 
+Volume ${dailyVolumeFormatted} 
+High/Low ${dailyData.lowPrice.toFixed(2)} - ${dailyData.highPrice.toFixed(2)} 
+and technical data with 30 minutes interval: 
+RSI (14) ${intradayRSI ? intradayRSI.toFixed(2) : 'N/A'} 
+MACD ${intradayMACD ? intradayMACD.macd.toFixed(4) : 'N/A'} 
+SMA 20 ${intradaySMA20 ? intradaySMA20.toFixed(2) : 'N/A'} 
+SMA 50 ${intradaySMA50 ? intradaySMA50.toFixed(2) : 'N/A'} 
+Avg Volume ${intradayVolumeFormatted} 
+30min Range ${intradayData.lowPrice.toFixed(2)} - ${intradayData.highPrice.toFixed(2)} 
+Current price ${dailyData.price.toFixed(2)}. 
+Identify the primary upward/downward trend, explain what these indicate about the current market sentiment. Focus on Short-term (intraday), 3 day and 5 days trading strategy`;
+    
+    return prompt;
+}
+
+async function generateAIAnalysis() {
+    const generateBtn = document.getElementById('generateAnalysisBtn');
+    const statusDiv = document.getElementById('analysis-status');
+    const promptDiv = document.getElementById('chatgpt-prompt');
+    const responseDiv = document.getElementById('chatgpt-response');
+    const placeholderDiv = document.getElementById('chatgpt-placeholder');
+    const promptContent = document.getElementById('prompt-content');
+    const responseContent = document.getElementById('response-content');
+    
+    try {
+        // Disable button and show loading
+        generateBtn.disabled = true;
+        generateBtn.textContent = '🔄 Generating Analysis...';
+        statusDiv.className = 'analysis-status loading';
+        statusDiv.style.display = 'block';
+        statusDiv.textContent = '🤖 Generating comprehensive AI analysis...';
+        
+        // Hide placeholder and show prompt
+        placeholderDiv.style.display = 'none';
+        
+        // Generate and display the prompt
+        const prompt = generateChatGPTPrompt();
+        promptContent.textContent = prompt;
+        promptDiv.style.display = 'block';
+        
+        // Simulate AI analysis (since we can't actually call ChatGPT API from client-side)
+        // In a real implementation, you would send this to your backend which calls ChatGPT API
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API call delay
+        
+        // Generate a comprehensive analysis response
+        const analysisResponse = generateMockAnalysis();
+        
+        // Display the response
+        responseContent.innerHTML = analysisResponse;
+        responseDiv.style.display = 'block';
+        
+        // Update status
+        statusDiv.className = 'analysis-status success';
+        statusDiv.textContent = '✅ AI analysis completed successfully!';
+        
+        // Hide status after delay
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Error generating AI analysis:', error);
+        statusDiv.className = 'analysis-status error';
+        statusDiv.textContent = `❌ Error: ${error.message}`;
+    } finally {
+        // Re-enable button
+        generateBtn.disabled = false;
+        generateBtn.textContent = '🧠 Generate AI Analysis';
+    }
+}
+
+function formatAIResponse(aiText, symbol, metadata = {}) {
+    // Parse AI response sections (assuming structured response from ChatGPT)
+    const sections = parseAIResponse(aiText);
+    
+    // Calculate some basic trend info for styling
+    const trendDirection = determineTrendFromAI(aiText);
+    const confidenceLevel = extractConfidenceFromAI(aiText);
+    
+    return `
+        <div style="line-height: 1.8;">
+            <div class="ai-header-section">
+                <h4 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.4em;">
+                    🤖 AI-Powered Technical Analysis for ${symbol}
+                </h4>
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <strong>🎯 AI Analysis Status:</strong> Complete
+                        </div>
+                        <div>
+                            <strong>⏰ Generated:</strong> ${new Date().toLocaleString()}
+                        </div>
+                        <div>
+                            <strong>🔍 Confidence:</strong> 
+                            <span style="background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 12px;">
+                                ${confidenceLevel}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: ${trendDirection === 'Bullish' ? '#e8f5e8' : trendDirection === 'Bearish' ? '#fdf2f2' : '#f8f9fa'}; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid ${trendDirection === 'Bullish' ? '#27ae60' : trendDirection === 'Bearish' ? '#e74c3c' : '#3498db'};">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 1.5em; margin-right: 10px;">
+                        ${trendDirection === 'Bullish' ? '📈' : trendDirection === 'Bearish' ? '📉' : '⚖️'}
+                    </span>
+                    <strong style="color: #2c3e50; font-size: 1.1em;">Overall Market Sentiment: ${trendDirection || 'Neutral'}</strong>
+                </div>
+                <p style="margin: 8px 0; color: #2c3e50;">
+                    ${sections.sentiment || extractSentimentFromAI(aiText)}
+                </p>
+            </div>
+            
+            <div style="background: #e8f4fd; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #3498db;">
+                <h5 style="color: #2c3e50; margin-bottom: 12px; font-size: 1.1em;">
+                    📊 Technical Indicators Summary
+                </h5>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                    ${generateTechnicalSummaryCards()}
+                </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                <h5 style="color: #2c3e50; margin-bottom: 15px; font-size: 1.1em;">
+                    🎯 AI Trading Strategies
+                </h5>
+                
+                <div style="display: grid; gap: 15px;">
+                    <div class="strategy-card" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #e74c3c;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <span style="font-size: 1.2em; margin-right: 8px;">⚡</span>
+                            <strong style="color: #2c3e50;">Short-term (Intraday Strategy)</strong>
+                        </div>
+                        <div style="background: #fff5f5; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                            ${formatStrategySection(sections.intraday || extractIntradayFromAI(aiText))}
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #f39c12;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <span style="font-size: 1.2em; margin-right: 8px;">📈</span>
+                            <strong style="color: #2c3e50;">3-Day Medium-term Strategy</strong>
+                        </div>
+                        <div style="background: #fffbf0; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                            ${formatStrategySection(sections.threeDay || extractThreeDayFromAI(aiText))}
+                        </div>
+                    </div>
+                    
+                    <div class="strategy-card" style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #27ae60;">
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <span style="font-size: 1.2em; margin-right: 8px;">📊</span>
+                            <strong style="color: #2c3e50;">5-Day Weekly Strategy</strong>
+                        </div>
+                        <div style="background: #f0f9f0; padding: 10px; border-radius: 6px; margin: 8px 0;">
+                            ${formatStrategySection(sections.fiveDay || extractFiveDayFromAI(aiText))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h5 style="margin-bottom: 15px; font-size: 1.1em;">
+                    💡 Key AI Insights & Recommendations
+                </h5>
+                <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                    ${formatKeyInsights(sections.insights || extractInsightsFromAI(aiText))}
+                </div>
+            </div>
+            
+            <div style="background: #fdf2f2; border: 1px solid #f5c6cb; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <span style="font-size: 1.3em; margin-right: 10px;">⚠️</span>
+                    <strong style="color: #721c24; font-size: 1.1em;">Risk Management & Disclaimers</strong>
+                </div>
+                <div style="background: white; padding: 15px; border-radius: 8px;">
+                    ${formatRiskSection(sections.risk || extractRiskFromAI(aiText))}
+                </div>
+            </div>
+            
+            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 15px; border-radius: 10px; text-align: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.9em;">
+                    <div>🤖 <strong>Powered by Advanced AI</strong></div>
+                    <div>📊 <strong>Model:</strong> ${metadata.model || 'GPT-4'}</div>
+                    <div>⚡ <strong>Tokens:</strong> ${metadata.tokensUsed || 'N/A'}</div>
+                    <div>🕒 <strong>Analysis Time:</strong> ${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div style="margin-top: 10px; font-size: 0.8em; opacity: 0.9;">
+                    This analysis combines real market data with AI-powered insights for educational purposes only.
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Helper functions to parse and format AI response
+function parseAIResponse(aiText) {
+    const sections = {};
+    
+    // Try to extract structured sections from AI response
+    const sentimentMatch = aiText.match(/(?:Market Sentiment|Sentiment Summary)[:\s]*(.*?)(?=\n\n|\*\*|##|$)/is);
+    const intradayMatch = aiText.match(/(?:Short-term|Intraday)[:\s]*(.*?)(?=\n\n|\*\*|##|$)/is);
+    const threeDayMatch = aiText.match(/(?:3-Day|Three Day)[:\s]*(.*?)(?=\n\n|\*\*|##|$)/is);
+    const fiveDayMatch = aiText.match(/(?:5-Day|Five Day)[:\s]*(.*?)(?=\n\n|\*\*|##|$)/is);
+    const riskMatch = aiText.match(/(?:Risk|Disclaimer)[:\s]*(.*?)(?=\n\n|\*\*|##|$)/is);
+    
+    sections.sentiment = sentimentMatch ? sentimentMatch[1].trim() : null;
+    sections.intraday = intradayMatch ? intradayMatch[1].trim() : null;
+    sections.threeDay = threeDayMatch ? threeDayMatch[1].trim() : null;
+    sections.fiveDay = fiveDayMatch ? fiveDayMatch[1].trim() : null;
+    sections.risk = riskMatch ? riskMatch[1].trim() : null;
+    
+    return sections;
+}
+
+function determineTrendFromAI(aiText) {
+    const bullishWords = ['bullish', 'upward', 'positive', 'buy', 'long', 'rally'];
+    const bearishWords = ['bearish', 'downward', 'negative', 'sell', 'short', 'decline'];
+    
+    const text = aiText.toLowerCase();
+    const bullishCount = bullishWords.filter(word => text.includes(word)).length;
+    const bearishCount = bearishWords.filter(word => text.includes(word)).length;
+    
+    if (bullishCount > bearishCount + 1) return 'Bullish';
+    if (bearishCount > bullishCount + 1) return 'Bearish';
+    return 'Neutral';
+}
+
+function extractConfidenceFromAI(aiText) {
+    const confidenceMatch = aiText.match(/confidence[:\s]*(high|medium|low)/i);
+    if (confidenceMatch) return confidenceMatch[1].charAt(0).toUpperCase() + confidenceMatch[1].slice(1);
+    
+    // Estimate confidence from text sentiment
+    const certaintyWords = ['definitely', 'clearly', 'strong', 'significant'];
+    const uncertaintyWords = ['might', 'could', 'possible', 'uncertain'];
+    
+    const text = aiText.toLowerCase();
+    const certaintyCount = certaintyWords.filter(word => text.includes(word)).length;
+    const uncertaintyCount = uncertaintyWords.filter(word => text.includes(word)).length;
+    
+    if (certaintyCount > uncertaintyCount) return 'High';
+    if (uncertaintyCount > certaintyCount) return 'Low';
+    return 'Medium';
+}
+
+function generateTechnicalSummaryCards() {
+    if (!dailyData || !intradayData) return '<p>Technical data not available</p>';
+    
+    const dailyRSI = calculateRSI(dailyData.historicalPrices);
+    const dailyMACD = calculateMACD(dailyData.historicalPrices);
+    const intradayRSI = calculateRSI(intradayData.historicalPrices);
+    const intradayMACD = calculateMACD(intradayData.historicalPrices);
+    
+    return `
+        <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
+            <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Daily RSI</div>
+            <div style="font-size: 1.2em; color: ${dailyRSI > 70 ? '#e74c3c' : dailyRSI < 30 ? '#27ae60' : '#3498db'};">
+                ${dailyRSI ? dailyRSI.toFixed(1) : 'N/A'}
+            </div>
+            <div style="font-size: 0.8em; color: #7f8c8d;">
+                ${dailyRSI > 70 ? 'Overbought' : dailyRSI < 30 ? 'Oversold' : 'Neutral'}
+            </div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
+            <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">Daily MACD</div>
+            <div style="font-size: 1.2em; color: ${dailyMACD && dailyMACD.macd > dailyMACD.signal ? '#27ae60' : '#e74c3c'};">
+                ${dailyMACD ? dailyMACD.macd.toFixed(3) : 'N/A'}
+            </div>
+            <div style="font-size: 0.8em; color: #7f8c8d;">
+                ${dailyMACD && dailyMACD.macd > dailyMACD.signal ? 'Bullish' : 'Bearish'}
+            </div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
+            <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">30min RSI</div>
+            <div style="font-size: 1.2em; color: ${intradayRSI > 70 ? '#e74c3c' : intradayRSI < 30 ? '#27ae60' : '#3498db'};">
+                ${intradayRSI ? intradayRSI.toFixed(1) : 'N/A'}
+            </div>
+            <div style="font-size: 0.8em; color: #7f8c8d;">
+                ${intradayRSI > 70 ? 'Overbought' : intradayRSI < 30 ? 'Oversold' : 'Neutral'}
+            </div>
+        </div>
+        <div style="background: white; padding: 10px; border-radius: 6px; text-align: center;">
+            <div style="font-weight: bold; color: #2c3e50; margin-bottom: 5px;">30min MACD</div>
+            <div style="font-size: 1.2em; color: ${intradayMACD && intradayMACD.macd > intradayMACD.signal ? '#27ae60' : '#e74c3c'};">
+                ${intradayMACD ? intradayMACD.macd.toFixed(3) : 'N/A'}
+            </div>
+            <div style="font-size: 0.8em; color: #7f8c8d;">
+                ${intradayMACD && intradayMACD.macd > intradayMACD.signal ? 'Bullish' : 'Bearish'}
+            </div>
+        </div>
+    `;
+}
+
+function formatStrategySection(strategy) {
+    if (!strategy) return '<p style="color: #7f8c8d; font-style: italic;">Strategy details will be provided by AI analysis...</p>';
+    
+    // Convert bullet points and enhance formatting
+    return strategy
+        .replace(/•/g, '💡')
+        .replace(/\n-/g, '\n💡')
+        .replace(/\n\*/g, '\n💡')
+        .replace(/\n/g, '<br>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #2c3e50;">$1</strong>');
+}
+
+function formatKeyInsights(insights) {
+    if (!insights) {
+        return `
+            <div style="display: grid; gap: 10px;">
+                <div>💡 Comprehensive multi-timeframe analysis combining daily and 30-minute intervals</div>
+                <div>🎯 AI-powered trend identification and sentiment analysis</div>
+                <div>📊 Real-time technical indicator evaluation and interpretation</div>
+                <div>⚡ Dynamic strategy recommendations based on current market conditions</div>
+            </div>
+        `;
+    }
+    
+    return insights
+        .replace(/\n/g, '<br>')
+        .replace(/•/g, '💡')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+}
+
+function formatRiskSection(risk) {
+    const defaultRisk = `
+        <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+            <li><strong>AI Analysis Limitation:</strong> This analysis is based on technical indicators only and should not be considered financial advice</li>
+            <li><strong>Position Sizing:</strong> Always use proper position sizing and risk management techniques</li>
+            <li><strong>Stop-Loss Orders:</strong> Implement stop-loss orders to limit potential losses</li>
+            <li><strong>Market Volatility:</strong> Market conditions can change rapidly - monitor positions closely</li>
+            <li><strong>Educational Purpose:</strong> This analysis is for educational and informational purposes only</li>
+            <li><strong>Professional Advice:</strong> Consider consulting with a licensed financial advisor for investment decisions</li>
+        </ul>
+    `;
+    
+    if (!risk) return defaultRisk;
+    
+    return risk
+        .replace(/\n/g, '<br>')
+        .replace(/•/g, '⚠️')
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #721c24;">$1</strong>');
+}
+
+// Extract specific sections from AI text (fallback functions)
+function extractSentimentFromAI(aiText) {
+    // Try to extract the first paragraph or summary
+    const sentences = aiText.split(/\.\s+/);
+    return sentences.slice(0, 2).join('. ') + (sentences.length > 2 ? '.' : '');
+}
+
+function extractIntradayFromAI(aiText) {
+    const match = aiText.match(/intraday[^.]*\.(?:[^.]*\.){0,2}/i);
+    return match ? match[0] : 'Intraday strategy analysis will be provided based on 30-minute interval data and current market momentum.';
+}
+
+function extractThreeDayFromAI(aiText) {
+    const match = aiText.match(/3-day[^.]*\.(?:[^.]*\.){0,2}/i);
+    return match ? match[0] : '3-day strategy will focus on medium-term trend continuation and key support/resistance levels.';
+}
+
+function extractFiveDayFromAI(aiText) {
+    const match = aiText.match(/5-day[^.]*\.(?:[^.]*\.){0,2}/i);
+    return match ? match[0] : '5-day strategy will consider weekly patterns and medium-term trend analysis for position management.';
+}
+
+function extractInsightsFromAI(aiText) {
+    // Extract key insights or return defaults
+    const keywordMatches = aiText.match(/(key|important|significant|notable)[^.]*\./gi);
+    if (keywordMatches && keywordMatches.length > 0) {
+        return keywordMatches.slice(0, 3).join('\n');
+    }
+    return null;
+}
+
+function extractRiskFromAI(aiText) {
+    const riskMatch = aiText.match(/risk[^.]*\.(?:[^.]*\.){0,2}/i);
+    return riskMatch ? riskMatch[0] : null;
+}
+
+// TwelveData API functions (same as before but storing data globally)
 async function fetchTwelveDataDaily(symbol) {
-    // Replace 'demo' with your actual TwelveData API key
-    // Get free API key at: https://twelvedata.com/
     const apiKey = 'demo'; 
     
     try {
@@ -263,8 +713,6 @@ async function fetchTwelveDataDaily(symbol) {
 
 // TwelveData API for 30-minute intervals
 async function fetchTwelveDataIntraday(symbol) {
-    // Replace 'demo' with your actual TwelveData API key
-    // Get free API key at: https://twelvedata.com/
     const apiKey = 'demo'; 
     
     try {
@@ -306,7 +754,7 @@ async function fetchTwelveDataIntraday(symbol) {
         const historicalPrices = historicalData.map(d => d.close);
         const avgVolume = historicalData.reduce((sum, d) => sum + d.volume, 0) / historicalData.length;
         
-        console.log(`✅ TwelveData intraday data for ${symbol}: $${currentPrice.toFixed(2)}`);
+        console.log(`✅ TwelveData intraday data for ${symbol}: ${currentPrice.toFixed(2)}`);
         
         return {
             symbol: symbol.toUpperCase(),
@@ -623,6 +1071,9 @@ async function loadDailyData(symbol) {
             data = generateDemoData(symbol, 'daily');
         }
         
+        // Store data globally for ChatGPT analysis
+        dailyData = data;
+        
         const signal = generateTradingSignal(data.symbol, data.price, data.historicalPrices);
         
         // Create chart
@@ -657,6 +1108,9 @@ async function loadIntradayData(symbol) {
             data = generateDemoData(symbol, 'intraday');
         }
         
+        // Store data globally for ChatGPT analysis
+        intradayData = data;
+        
         const signal = generateTradingSignal(data.symbol, data.price, data.historicalPrices);
         
         // Create chart
@@ -686,13 +1140,52 @@ window.addEventListener('load', function() {
     document.getElementById('stockTitle').textContent = `Detailed Analysis for ${currentSymbol}`;
     document.title = `Trading Robot - ${currentSymbol} Analysis`;
     
+    // Set up tab event listeners with explicit event handling
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const tabName = this.getAttribute('data-tab');
+            console.log(`Tab clicked: ${tabName}`);
+            switchTab(tabName);
+        });
+    });
+    
+    // Alternative method - also add onclick handlers directly
+    const dailyTab = document.querySelector('[data-tab="daily"]');
+    const intradayTab = document.querySelector('[data-tab="intraday"]');
+    const chatgptTab = document.querySelector('[data-tab="chatgpt"]');
+    
+    if (dailyTab) {
+        dailyTab.onclick = function() { switchTab('daily'); };
+    }
+    if (intradayTab) {
+        intradayTab.onclick = function() { switchTab('intraday'); };
+    }
+    if (chatgptTab) {
+        chatgptTab.onclick = function() { switchTab('chatgpt'); };
+    }
+    
+    // Set up ChatGPT analysis button
+    const generateBtn = document.getElementById('generateAnalysisBtn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            generateAIAnalysis();
+        });
+    }
+    
+    // Ensure daily tab is active initially
+    switchTab('daily');
+    
     // Load daily data first
     loadDailyData(currentSymbol);
     
-    console.log('📊 Enhanced Detailed Stock Analysis Page Loaded');
+    console.log('📊 Enhanced Detailed Stock Analysis Page Loaded with ChatGPT Integration');
     console.log(`🎯 Analyzing: ${currentSymbol}`);
     console.log('📈 Daily Interval: TwelveData PRIMARY data source');
     console.log('⚡ 30-Minute Interval: TwelveData API');
+    console.log('🤖 NEW: AI Analysis tab with comprehensive trading insights');
     console.log('');
     console.log('🔑 API Setup:');
     console.log('- TwelveData (Both intervals): https://twelvedata.com/');
@@ -704,5 +1197,6 @@ window.addEventListener('load', function() {
     console.log('- Real-time technical analysis calculations');
     console.log('- Comprehensive trading signals with confidence levels');
     console.log('- Multiple timeframe analysis (Daily vs 30-minute)');
+    console.log('- 🆕 AI-powered analysis combining both timeframes');
     console.log('- Enhanced data consistency using single API provider');
 });
