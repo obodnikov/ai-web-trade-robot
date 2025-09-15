@@ -1,4 +1,4 @@
-// trading-robot.js - Trading Robot with Alpha Vantage as Primary Data Source
+// trading-robot.js - Trading Robot with Alpha Vantage as Primary Data Source + Detailed View
 
 let isAnalyzing = false;
 
@@ -496,7 +496,7 @@ async function fetchStockData(symbol) {
         console.log(`  ❌ Polygon.io FALLBACK FAILED: ${error.message}`);
     }
     
-    console.log(`  3️⃣ Using Demo Data for ${symbol}...`);
+    console.log(`  🔵 Using Demo Data for ${symbol}...`);
     const demoData = generateDemoData(symbol);
     console.log(`  ✅ Demo Data GENERATED for ${symbol}`);
     return demoData;
@@ -581,6 +581,13 @@ function hideStatus() {
     document.getElementById('status').classList.add('hidden');
 }
 
+// Function to open detailed view
+function openDetailedView(symbol) {
+    // Open detailed analysis page in new window/tab
+    const detailUrl = `detailed-view.html?symbol=${encodeURIComponent(symbol)}`;
+    window.open(detailUrl, '_blank');
+}
+
 function createStockCard(stockData, signal) {
     const rsi = calculateRSI(stockData.historicalPrices);
     const macd = calculateMACD(stockData.historicalPrices);
@@ -631,7 +638,8 @@ function createStockCard(stockData, signal) {
         `<span style="color: #e74c3c;">⚠ Only ${stockData.historicalPrices.length} data points</span>`;
     
     return `
-        <div class="stock-card">
+        <div class="stock-card" onclick="openDetailedView('${stockData.symbol}')">
+            <div class="clickable-hint">Click for Details</div>
             <div class="stock-header">
                 <div>
                     <div class="stock-symbol">${stockData.symbol}</div>
@@ -724,6 +732,10 @@ function createStockCard(stockData, signal) {
                         '✅ Analysis based on real market data'
                     }
                 </div>
+                <br>
+                <div style="font-size: 0.9em; color: #3498db; font-weight: bold; text-align: center;">
+                    🔍 Click card for detailed analysis with charts & 30-min intervals
+                </div>
             </div>
         </div>
     `;
@@ -784,7 +796,7 @@ async function runSingleAnalysis() {
         }
         
         const successCount = tickers.length;
-        showStatus(`✅ Analysis complete for ${successCount} stock(s) using Alpha Vantage primary data source`, 'success');
+        showStatus(`✅ Analysis complete for ${successCount} stock(s) using Alpha Vantage primary data source. Click any card for detailed view!`, 'success');
         console.log(`\n🎉 Analysis Summary: ${successCount} stocks processed successfully with Alpha Vantage as primary`);
         setTimeout(hideStatus, 5000);
         
@@ -800,10 +812,11 @@ async function runSingleAnalysis() {
 
 // Initialize with helpful information
 window.addEventListener('load', function() {
-    console.log('📊 Trading Robot with Alpha Vantage as PRIMARY Data Source');
+    console.log('📊 Trading Robot with Alpha Vantage as PRIMARY Data Source + Detailed View');
     console.log('✅ PRIMARY: Alpha Vantage TIME_SERIES_DAILY (Most reliable historical data)');
     console.log('✅ FALLBACK: Polygon.io API (Secondary option)');
     console.log('✅ DEMO: Realistic simulation as final fallback');
+    console.log('🆕 NEW: Click any stock card for detailed analysis with charts!');
     console.log('');
     console.log('🔗 Data Sources Priority (UPDATED):');
     console.log('1. 🥇 PRIMARY: Alpha Vantage TIME_SERIES_DAILY - Real historical market data');
@@ -826,6 +839,7 @@ window.addEventListener('load', function() {
     console.log('🔑 API Setup:');
     console.log('- Get free Alpha Vantage key (PRIMARY): https://www.alphavantage.co/support/#api-key');
     console.log('- Get free Polygon.io key (FALLBACK): https://polygon.io/');
+    console.log('- Get free TwelveData key (30min intervals): https://twelvedata.com/');
     console.log('- Replace "demo" and "DEMO" with your actual API keys');
     console.log('');
     console.log('📊 Alpha Vantage PRIMARY Benefits:');
@@ -835,6 +849,13 @@ window.addEventListener('load', function() {
     console.log('- No CORS issues for client-side requests');
     console.log('- More accurate technical indicator calculations');
     console.log('- 5 calls/minute, 500 calls/day free tier');
+    console.log('');
+    console.log('🆕 NEW DETAILED VIEW FEATURES:');
+    console.log('- Interactive price charts with Chart.js');
+    console.log('- Daily interval analysis (Alpha Vantage)');
+    console.log('- 30-minute intraday analysis (TwelveData API)');
+    console.log('- Side-by-side comparison of timeframes');
+    console.log('- Enhanced technical indicators with visual representation');
     console.log('');
     console.log('🥈 Polygon.io FALLBACK Benefits:');
     console.log('- Real-time stock data backup when Alpha Vantage hits limits');
@@ -853,9 +874,11 @@ window.addEventListener('load', function() {
     console.log('⚠️ API Rate Limits:');
     console.log('- Alpha Vantage PRIMARY: 5 calls/minute, 500/day');
     console.log('- Polygon.io FALLBACK: 5 calls/minute, unlimited/day');
-    console.log('- Demo data activates when both APIs hit limits');
+    console.log('- TwelveData (30min): 8 calls/minute, 800/day (free tier)');
+    console.log('- Demo data activates when all APIs hit limits');
     console.log('');
     console.log('🔄 Single Run Mode: Click "Start Analysis" to analyze once with improved accuracy');
+    console.log('🔍 Detailed Mode: Click any stock card to open comprehensive analysis with charts');
     console.log('');
     console.log('💡 Expected Improvements:');
     console.log('- More consistent trading signals across runs');
@@ -863,4 +886,6 @@ window.addEventListener('load', function() {
     console.log('- Reduced reliance on generated/simulated data');
     console.log('- More reliable MACD crossover detection');
     console.log('- Improved RSI overbought/oversold identification');
+    console.log('- Interactive charts for visual analysis');
+    console.log('- Multiple timeframe analysis capabilities');
 });
