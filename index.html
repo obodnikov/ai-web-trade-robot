@@ -150,11 +150,66 @@
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
 
         .stock-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15);
+        }
+
+        .stock-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 0 20px 20px 0;
+            border-color: transparent #3498db transparent transparent;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stock-card:hover::before {
+            opacity: 1;
+        }
+
+        .stock-card::after {
+            content: '👁️';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            color: white;
+        }
+
+        .stock-card:hover::after {
+            opacity: 1;
+        }
+
+        .clickable-hint {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(52, 152, 219, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .stock-card:hover .clickable-hint {
+            opacity: 1;
         }
 
         .stock-header {
@@ -274,7 +329,6 @@
             font-size: 0.9em;
         }
 
-        /* Help Card Styles */
         .help-card {
             background: white;
             border-radius: 15px;
@@ -401,7 +455,7 @@
 
         .ticker-categories {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmin(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
         }
 
@@ -421,6 +475,22 @@
         .ticker-category span {
             color: #7f8c8d;
             font-size: 0.9em;
+        }
+
+        .new-feature-banner {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px rgba(46, 204, 113, 0.5); }
+            to { box-shadow: 0 0 20px rgba(46, 204, 113, 0.8); }
         }
 
         @media (max-width: 768px) {
@@ -453,6 +523,10 @@
             <p>Enhanced market analysis powered by Alpha Vantage historical data</p>
         </div>
 
+        <div class="new-feature-banner">
+            🆕 NEW FEATURE: Click on any stock card for detailed analysis with interactive charts and 30-minute intervals!
+        </div>
+
         <div class="api-info">
             <strong>📡 Data Sources:</strong> 
             🥇 Primary: Alpha Vantage (Historical) → 🥈 Fallback: Polygon.io (Real-time) → 🔵 Demo: Realistic Simulation
@@ -461,6 +535,8 @@
             Replace 'demo' with your free Alpha Vantage API key from <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co</a>
             <br>
             <strong>💡 Why Alpha Vantage Primary:</strong> Better historical data quality for more accurate technical analysis calculations
+            <br>
+            <strong>🆕 Detailed View:</strong> Get TwelveData API key from <a href="https://twelvedata.com/" target="_blank">twelvedata.com</a> for 30-minute intervals
         </div>
 
         <div class="control-panel">
@@ -541,6 +617,21 @@
                     
                     <p><strong>Reliable Trends:</strong> Alpha Vantage's consistent historical data eliminates artificial price movements, providing cleaner moving average crossovers and more trustworthy trend signals.</p>
                 </div>
+
+                <!-- NEW: Detailed Analysis Section -->
+                <div class="help-section">
+                    <h3>🔍 NEW: Detailed Analysis</h3>
+                    <p><strong>Click on any stock card</strong> to access comprehensive analysis with interactive charts and multiple timeframes!</p>
+                    
+                    <div class="signal-item">
+                        <strong>Daily Interval:</strong> Alpha Vantage historical data with price charts and moving averages
+                    </div>
+                    <div class="signal-item">
+                        <strong>30-Minute Interval:</strong> TwelveData intraday analysis for short-term trading opportunities
+                    </div>
+                    
+                    <p><strong>Interactive Features:</strong> Real-time charts with Chart.js, detailed technical indicators, and comprehensive trading signals with confidence levels for both daily and intraday analysis.</p>
+                </div>
             </div>
 
             <!-- Sample Tickers Section -->
@@ -597,8 +688,8 @@
                     <p>On-demand analysis without continuous monitoring - click and analyze instantly with improved data quality.</p>
                 </div>
                 <div class="feature-box">
-                    <h4>⚡ Fast & Reliable</h4>
-                    <p>Pure vanilla JavaScript with multiple data sources and better error handling for consistent performance.</p>
+                    <h4>🔍 NEW: Detailed Views</h4>
+                    <p>Click any stock card for comprehensive analysis with interactive charts, daily & 30-minute intervals using TwelveData API.</p>
                 </div>
             </div>
 
