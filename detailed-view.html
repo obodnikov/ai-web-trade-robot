@@ -17,8 +17,9 @@
         <a href="index.html" class="back-button">← Back to Main</a>
 
         <div class="interval-tabs">
-            <button class="tab-button active" onclick="switchTab('daily')">📈 Daily Interval</button>
-            <button class="tab-button" onclick="switchTab('intraday')">⚡ 30-Minute Interval</button>
+            <button class="tab-button active" data-tab="daily" id="daily-tab-btn" onclick="switchTab('daily')">📈 Daily Interval</button>
+            <button class="tab-button" data-tab="intraday" id="intraday-tab-btn" onclick="switchTab('intraday')">⚡ 30-Minute Interval</button>
+            <button class="tab-button" data-tab="chatgpt" id="chatgpt-tab-btn" onclick="switchTab('chatgpt')">🤖 AI Analysis</button>
         </div>
 
         <!-- Daily Interval Tab -->
@@ -138,6 +139,64 @@
                     </div>
                 </div>
                 <div id="intraday-error" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- ChatGPT AI Analysis Tab -->
+        <div id="chatgpt-tab" class="tab-content">
+            <div class="detailed-card">
+                <div class="chatgpt-section">
+                    <div class="chatgpt-header">
+                        <h3>🤖 AI-Powered Technical Analysis</h3>
+                        <p>Advanced analysis combining daily and 30-minute interval data for comprehensive trading insights</p>
+                    </div>
+
+                    <div class="chatgpt-controls">
+                        <button class="btn btn-primary" id="generateAnalysisBtn">
+                            🧠 Generate AI Analysis
+                        </button>
+                        <div id="analysis-status" class="analysis-status hidden"></div>
+                    </div>
+
+                    <div class="analysis-container">
+                        <div id="chatgpt-prompt" class="prompt-section" style="display: none;">
+                            <h4>📋 Analysis Prompt:</h4>
+                            <div class="prompt-text" id="prompt-content"></div>
+                        </div>
+
+                        <div id="chatgpt-response" class="response-section" style="display: none;">
+                            <h4>🎯 AI Analysis Results:</h4>
+                            <div class="response-text" id="response-content"></div>
+                        </div>
+
+                        <div id="chatgpt-placeholder" class="placeholder-section">
+                            <div class="placeholder-content">
+                                <h4>🤖 AI Analysis Features</h4>
+                                <div class="feature-list">
+                                    <div class="ai-feature">
+                                        <strong>📊 Multi-Timeframe Analysis:</strong>
+                                        <p>Combines both daily and 30-minute interval technical data for comprehensive insights</p>
+                                    </div>
+                                    <div class="ai-feature">
+                                        <strong>🎯 Trading Strategy Focus:</strong>
+                                        <p>Provides specific recommendations for short-term (intraday), 3-day, and 5-day trading horizons</p>
+                                    </div>
+                                    <div class="ai-feature">
+                                        <strong>📈 Trend Identification:</strong>
+                                        <p>Analyzes primary upward/downward trends and current market sentiment</p>
+                                    </div>
+                                    <div class="ai-feature">
+                                        <strong>⚡ Real-Time Integration:</strong>
+                                        <p>Uses current technical indicators from both daily and intraday data sources</p>
+                                    </div>
+                                </div>
+                                <div class="getting-started">
+                                    <p><strong>To get started:</strong> Load data in the Daily and 30-Minute tabs first, then click "Generate AI Analysis" to create a comprehensive trading analysis.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
