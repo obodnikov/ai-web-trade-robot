@@ -280,6 +280,7 @@ Identify the primary upward/downward trend, explain what these indicate about th
     return prompt;
 }
 
+// Replace the generateAIAnalysis function with this:
 async function generateAIAnalysis() {
     const generateBtn = document.getElementById('generateAnalysisBtn');
     const statusDiv = document.getElementById('analysis-status');
@@ -295,7 +296,7 @@ async function generateAIAnalysis() {
         generateBtn.textContent = '🔄 Generating Analysis...';
         statusDiv.className = 'analysis-status loading';
         statusDiv.style.display = 'block';
-        statusDiv.textContent = '🤖 Generating comprehensive AI analysis...';
+        statusDiv.textContent = '🤖 Connecting to AI analysis service...';
         
         // Hide placeholder and show prompt
         placeholderDiv.style.display = 'none';
@@ -305,15 +306,44 @@ async function generateAIAnalysis() {
         promptContent.textContent = prompt;
         promptDiv.style.display = 'block';
         
-        // Simulate AI analysis (since we can't actually call ChatGPT API from client-side)
-        // In a real implementation, you would send this to your backend which calls ChatGPT API
-        await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate API call delay
+        // Update status
+        statusDiv.textContent = '🧠 AI is analyzing your trading data...';
         
-        // Generate a comprehensive analysis response
-        const analysisResponse = generateMockAnalysis();
+        // Call your middleware API
+        const response = await fetch('http://localhost:3001/api/analyze-stock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                prompt: prompt,
+                symbol: currentSymbol
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `API request failed: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Analysis failed');
+        }
         
         // Display the response
-        responseContent.innerHTML = analysisResponse;
+        responseContent.innerHTML = `
+            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <strong>🤖 AI Analysis for ${result.symbol}</strong>
+                <p style="margin: 5px 0; font-size: 0.9em; color: #7f8c8d;">
+                    Generated: ${new Date(result.timestamp).toLocaleString()} | 
+                    Model: ${result.model} | 
+                    Tokens: ${result.tokensUsed}
+                </p>
+            </div>
+            <div style="line-height: 1.6; white-space: pre-wrap;">${result.analysis}</div>
+        `;
         responseDiv.style.display = 'block';
         
         // Update status
@@ -329,6 +359,23 @@ async function generateAIAnalysis() {
         console.error('Error generating AI analysis:', error);
         statusDiv.className = 'analysis-status error';
         statusDiv.textContent = `❌ Error: ${error.message}`;
+        
+        // Show fallback mock analysis
+        setTimeout(() => {
+            const mockAnalysis = generateMockAnalysis();
+            responseContent.innerHTML = `
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ffeaa7;">
+                    <strong>⚠️ Fallback Analysis (AI Service Unavailable)</strong>
+                    <p style="margin: 5px 0; font-size: 0.9em; color: #856404;">
+                        Using local analysis while AI service is being set up...
+                    </p>
+                </div>
+                ${mockAnalysis}
+            `;
+            responseDiv.style.display = 'block';
+            statusDiv.style.display = 'none';
+        }, 2000);
+        
     } finally {
         // Re-enable button
         generateBtn.disabled = false;
