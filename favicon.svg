@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Background -->
+  <rect x="0" y="0" width="100" height="100" fill="#2e7d32" rx="8"/>
+  
+  <!-- Chart grid lines (subtle) -->
+  <defs>
+    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+      <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#4caf50" stroke-width="0.5" opacity="0.3"/>
+    </pattern>
+  </defs>
+  <rect x="10" y="10" width="80" height="80" fill="url(#grid)"/>
+  
+  <!-- Rising chart line with sharp upward trend -->
+  <path d="M15 75 L25 70 L35 65 L45 55 L55 45 L65 30 L75 20 L85 15" 
+        stroke="#00e676" 
+        stroke-width="3" 
+        fill="none" 
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+  
+  <!-- Chart points -->
+  <circle cx="15" cy="75" r="2" fill="#00e676"/>
+  <circle cx="25" cy="70" r="2" fill="#00e676"/>
+  <circle cx="35" cy="65" r="2" fill="#00e676"/>
+  <circle cx="45" cy="55" r="2" fill="#00e676"/>
+  <circle cx="55" cy="45" r="2" fill="#00e676"/>
+  <circle cx="65" cy="30" r="2" fill="#00e676"/>
+  <circle cx="75" cy="20" r="2" fill="#00e676"/>
+  <circle cx="85" cy="15" r="2" fill="#00e676"/>
+  
+  <!-- Upward arrow at the end -->
+  <path d="M80 20 L85 15 L90 20 M85 15 L85 25" 
+        stroke="#00e676" 
+        stroke-width="2.5" 
+        fill="none" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"/>
+  
+  <!-- Yen symbol (¥) in top left -->
+  <g transform="translate(25, 25)" fill="#ffffff">
+    <!-- Y shape -->
+    <path d="M-6 -8 L0 0 L6 -8 M0 0 L0 8" 
+          stroke="#ffffff" 
+          stroke-width="2.5" 
+          fill="none" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+    
+    <!-- Horizontal lines for Yen -->
+    <line x1="-5" y1="2" x2="5" y2="2" 
+          stroke="#ffffff" 
+          stroke-width="2" 
+          stroke-linecap="round"/>
+    <line x1="-5" y1="5" x2="5" y2="5" 
+          stroke="#ffffff" 
+          stroke-width="2" 
+          stroke-linecap="round"/>
+  </g>
+  
+  <!-- Small sparkle effects to show growth -->
+  <g fill="#76ff03" opacity="0.8">
+    <polygon points="70,25 72,30 77,30 73,33 75,38 70,35 65,38 67,33 63,30 68,30" transform="scale(0.4)"/>
+    <polygon points="45,35 47,40 52,40 48,43 50,48 45,45 40,48 42,43 38,40 43,40" transform="scale(0.3)"/>
+  </g>
+  
+  <!-- Additional chart elements that make it look more like the emoji -->
+  <rect x="12" y="72" width="2" height="6" fill="#4caf50" opacity="0.7"/>
+  <rect x="22" y="67" width="2" height="11" fill="#4caf50" opacity="0.7"/>
+  <rect x="32" y="62" width="2" height="16" fill="#4caf50" opacity="0.7"/>
+  <rect x="42" y="52" width="2" height="26" fill="#4caf50" opacity="0.7"/>
+</svg>
