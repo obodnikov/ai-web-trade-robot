@@ -206,6 +206,16 @@ body {
     color: white;
 }
 
+/* Markdown design */
+
+.markdown-body h3 { color: #2c3e50; margin-top: 1.8em; margin-bottom: 0.8em; }
+.markdown-body p { margin: 0.6em 0; line-height: 1.6; }
+.markdown-body ul { margin-left: 2em; margin-bottom: 1em; }
+.markdown-body li { padding-left: 0.5em; line-height: 1.5; margin-bottom: 0.4em; }
+.markdown-body strong { color: #34495e; }
+.markdown-body code { background: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+
+
 /* Analysis Section */
 .analysis-section {
     background: #f8f9fa;
