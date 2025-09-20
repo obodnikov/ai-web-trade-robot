@@ -19,6 +19,7 @@
         <div class="interval-tabs">
             <button class="tab-button active" data-tab="daily" id="daily-tab-btn" onclick="switchTab('daily')">📈 Daily Interval</button>
             <button class="tab-button" data-tab="intraday" id="intraday-tab-btn" onclick="switchTab('intraday')">⚡ 30-Minute Interval</button>
+            <button class="tab-button" data-tab="intraday15" id="intraday15-tab-btn" onclick="switchTab('intraday15')">🚀 15-Minute Interval</button>
             <button class="tab-button" data-tab="chatgpt" id="chatgpt-tab-btn" onclick="switchTab('chatgpt')">🤖 AI Analysis</button>
         </div>
 
@@ -139,6 +140,66 @@
                     </div>
                 </div>
                 <div id="intraday-error" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- 15-Minute Interval Tab -->
+        <div id="intraday15-tab" class="tab-content">
+            <div class="detailed-card">
+                <div id="intraday15-loading" class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+                <div id="intraday15-content" style="display: none;">
+                    <div class="stock-header">
+                        <div>
+                            <div class="stock-symbol" id="intraday15-symbol">LOADING</div>
+                            <div id="intraday15-source-info"></div>
+                        </div>
+                        <div>
+                            <div class="stock-price" id="intraday15-price">$0.00</div>
+                            <div id="intraday15-change"></div>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="intraday15-chart"></canvas>
+                    </div>
+
+                    <div class="indicators-grid">
+                        <div class="indicator-box">
+                            <div class="indicator-label">RSI (14)</div>
+                            <div class="indicator-value" id="intraday15-rsi">-</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">MACD</div>
+                            <div class="indicator-value" id="intraday15-macd">-</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">SMA 20</div>
+                            <div class="indicator-value" id="intraday15-sma20">-</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">SMA 50</div>
+                            <div class="indicator-value" id="intraday15-sma50">-</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">Avg Volume</div>
+                            <div class="indicator-value" id="intraday15-volume">-</div>
+                        </div>
+                        <div class="indicator-box">
+                            <div class="indicator-label">15min Range</div>
+                            <div class="indicator-value" id="intraday15-range">-</div>
+                        </div>
+                    </div>
+
+                    <div class="signal" id="intraday15-signal">HOLD - 50% confidence</div>
+
+                    <div class="analysis-section">
+                        <h3>🚀 15-Minute Intraday Analysis</h3>
+                        <div id="intraday15-analysis"></div>
+                    </div>
+                </div>
+                <div id="intraday15-error" class="error-message" style="display: none;"></div>
             </div>
         </div>
 

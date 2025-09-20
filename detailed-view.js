@@ -176,8 +176,10 @@ function generateTradingSignal(symbol, currentPrice, historicalPrices) {
 let currentSymbol = '';
 let dailyChart = null;
 let intradayChart = null;
+let intraday15Chart = null;
 let dailyData = null;
 let intradayData = null;
+let intraday15Data = null;
 
 // Tab switching functionality
 function switchTab(tabName) {
@@ -192,6 +194,10 @@ function switchTab(tabName) {
     // Load data if not already loaded
     if (tabName === 'intraday' && document.getElementById('intraday-content').style.display === 'none') {
         loadIntradayData(currentSymbol);
+    }
+    
+    if (tabName === 'intraday15' && document.getElementById('intraday15-content').style.display === 'none') {
+        loadIntraday15Data(currentSymbol);
     }
     
     // Initialize ChatGPT tab if needed
@@ -635,6 +641,71 @@ async function fetchTwelveDataIntraday(symbol) {
     }
 }
 
+async function fetchTwelveDataIntraday15(symbol) {
+    const apiKey = 'demo'; 
+    
+    try {
+        console.log(`Fetching TwelveData 15min data for ${symbol}...`);
+        
+        const intradayUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=15min&outputsize=78&apikey=${apiKey}`;
+        const response = await fetch(intradayUrl);
+        
+        if (!response.ok) {
+            throw new Error(`TwelveData API failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'error') {
+            throw new Error(`TwelveData error: ${data.message}`);
+        }
+        
+        if (!data.values || data.values.length === 0) {
+            throw new Error('No 15-minute intraday data from TwelveData');
+        }
+        
+        // Process the data
+        const timeSeriesData = data.values.reverse(); // Most recent first
+        const historicalData = timeSeriesData.map(item => ({
+            datetime: item.datetime,
+            open: parseFloat(item.open),
+            high: parseFloat(item.high),
+            low: parseFloat(item.low),
+            close: parseFloat(item.close),
+            volume: parseInt(item.volume || 0)
+        }));
+        
+        const currentPrice = historicalData[historicalData.length - 1].close;
+        const previousPrice = historicalData.length > 1 ? historicalData[historicalData.length - 2].close : currentPrice;
+        const change = currentPrice - previousPrice;
+        const changePercent = (change / previousPrice) * 100;
+        
+        const historicalPrices = historicalData.map(d => d.close);
+        const avgVolume = historicalData.reduce((sum, d) => sum + d.volume, 0) / historicalData.length;
+        
+        console.log(`✅ TwelveData 15-minute intraday data for ${symbol}: ${currentPrice.toFixed(2)}`);
+        
+        return {
+            symbol: symbol.toUpperCase(),
+            price: currentPrice,
+            historicalPrices: historicalPrices,
+            historicalData: historicalData,
+            volume: avgVolume,
+            previousClose: previousPrice,
+            change: change,
+            changePercent: changePercent,
+            openPrice: historicalData[historicalData.length - 1].open,
+            highPrice: Math.max(...historicalData.slice(-1).map(d => d.high)),
+            lowPrice: Math.min(...historicalData.slice(-1).map(d => d.low)),
+            source: `TwelveData 15min (${historicalData.length} intervals)`
+        };
+        
+    } catch (error) {
+        console.error(`❌ TwelveData 15-minute intraday error for ${symbol}:`, error.message);
+        throw error;
+    }
+}
+
 // Demo data generator for fallback
 function generateDemoData(symbol, interval = 'daily') {
     const realisticPrices = {
@@ -656,12 +727,14 @@ function generateDemoData(symbol, interval = 'daily') {
     let price = currentPrice;
     
     const dataPoints = interval === 'daily' ? 60 : 78;
-    const timeIncrement = interval === 'daily' ? 24 * 60 * 60 * 1000 : 30 * 60 * 1000; // 1 day or 30 minutes
+    const timeIncrement = interval === 'daily' ? 24 * 60 * 60 * 1000 : (interval === 'intraday15' ? 15 * 60 * 1000 : 30 * 60 * 1000); // 1 day, 15 minutes, or 30 minutes
     
     for (let i = dataPoints; i > 0; i--) {
         const date = new Date();
         if (interval === 'daily') {
             date.setDate(date.getDate() - i);
+        } else if (interval === 'intraday15') {
+            date.setMinutes(date.getMinutes() - (i * 15));
         } else {
             date.setMinutes(date.getMinutes() - (i * 30));
         }
@@ -717,6 +790,9 @@ function createChart(canvasId, data, title, interval = 'daily') {
     }
     if (canvasId === 'intraday-chart' && intradayChart) {
         intradayChart.destroy();
+    }
+    if (canvasId === 'intraday15-chart' && intraday15Chart) {
+        intraday15Chart.destroy();
     }
     
     const labels = data.historicalData.map(item => {
@@ -815,6 +891,8 @@ function createChart(canvasId, data, title, interval = 'daily') {
     
     if (canvasId === 'daily-chart') {
         dailyChart = chart;
+    } else if (canvasId === 'intraday15-chart') {
+        intraday15Chart = chart;
     } else {
         intradayChart = chart;
     }
@@ -988,6 +1066,43 @@ async function loadIntradayData(symbol) {
     }
 }
 
+// Load 15-minute intraday data using TwelveData
+async function loadIntraday15Data(symbol) {
+    try {
+        document.getElementById('intraday15-loading').style.display = 'flex';
+        document.getElementById('intraday15-content').style.display = 'none';
+        document.getElementById('intraday15-error').style.display = 'none';
+        
+        let data;
+        try {
+            data = await fetchTwelveDataIntraday15(symbol);
+        } catch (error) {
+            console.log('TwelveData 15-minute intraday failed, using demo data');
+            data = generateDemoData(symbol, 'intraday15');
+        }
+        
+        // Store data globally for ChatGPT analysis
+        intraday15Data = data;
+        
+        const signal = generateTradingSignal(data.symbol, data.price, data.historicalPrices);
+        
+        // Create chart
+        createChart('intraday15-chart', data, `${symbol} - 15-Minute Intraday Chart`, 'intraday15');
+        
+        // Update UI
+        updateUI(data, signal, 'intraday15');
+        
+        document.getElementById('intraday15-loading').style.display = 'none';
+        document.getElementById('intraday15-content').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading 15-minute intraday data:', error);
+        document.getElementById('intraday15-loading').style.display = 'none';
+        document.getElementById('intraday15-error').style.display = 'block';
+        document.getElementById('intraday15-error').textContent = `Error loading 15-minute data: ${error.message}`;
+    }
+}
+
 // Initialize page
 window.addEventListener('load', function() {
     // Get symbol from URL parameters
@@ -1012,6 +1127,7 @@ window.addEventListener('load', function() {
     // Alternative method - also add onclick handlers directly
     const dailyTab = document.querySelector('[data-tab="daily"]');
     const intradayTab = document.querySelector('[data-tab="intraday"]');
+    const intraday15Tab = document.querySelector('[data-tab="intraday15"]');
     const chatgptTab = document.querySelector('[data-tab="chatgpt"]');
     
     if (dailyTab) {
@@ -1019,6 +1135,9 @@ window.addEventListener('load', function() {
     }
     if (intradayTab) {
         intradayTab.onclick = function() { switchTab('intraday'); };
+    }
+    if (intraday15Tab) {
+        intraday15Tab.onclick = function() { switchTab('intraday15'); };
     }
     if (chatgptTab) {
         chatgptTab.onclick = function() { switchTab('chatgpt'); };

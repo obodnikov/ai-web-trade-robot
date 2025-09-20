@@ -10,7 +10,7 @@ A comprehensive stock market analysis tool that provides real-time trading signa
 - **📈 Dual Data Sources**: Alpha Vantage for main analysis + TwelveData for detailed charts
 - **🎨 Interactive Charts**: Real-time price visualization with Chart.js and moving averages
 - **🔍 Enhanced Detailed Analysis**: Click any stock card for comprehensive TwelveData analysis
-- **📊 Multiple Timeframes**: Daily analysis (Alpha Vantage) + Daily & 30-minute intervals (TwelveData)
+- **📊 Multiple Timeframes**: Daily analysis (Alpha Vantage) + Daily, 30-minute & 15-minute intervals (TwelveData)
 - **Smart Fallback System**: Alpha Vantage → Polygon.io → TwelveData → Realistic Demo Data
 - **Improved Technical Analysis**: MACD, RSI, and Simple Moving Average indicators with real market data
 - **Consistent Trading Signals**: More reliable Buy/Sell/Hold recommendations with confidence levels
@@ -31,9 +31,10 @@ A comprehensive stock market analysis tool that provides real-time trading signa
 - **TwelveData Integration**: Both daily and 30-minute intervals use TwelveData API
 - **Consistent Data Source**: No more mixing APIs in detailed view
 - **Interactive Charts**: Chart.js integration with price lines and moving averages
-- **Dual Timeframes**: 
+- **Multiple Timeframes**:
   - Daily analysis using TwelveData daily data
   - 30-minute intraday analysis using TwelveData API
+  - 15-minute intraday analysis using TwelveData API
 - **Enhanced UI**: Tab-based interface for easy timeframe switching
 - **Visual Indicators**: Data source quality badges and real-time updates
 
@@ -150,9 +151,10 @@ trading-robot/
 1. **Click Any Card**: Opens detailed view in new window/tab with TwelveData
 2. **Daily Analysis**: View TwelveData daily data with interactive charts
 3. **30-Minute Analysis**: Switch to intraday tab for TwelveData 30-min analysis
-4. **Interactive Charts**: Hover over charts for detailed data points
-5. **Technical Indicators**: Enhanced visual indicators with color coding
-6. **Consistent Data**: Both intervals use TwelveData for reliability
+4. **15-Minute Analysis**: Switch to 15-min intraday tab for detailed short-term analysis
+5. **Interactive Charts**: Hover over charts for detailed data points
+6. **Technical Indicators**: Enhanced visual indicators with color coding
+7. **Consistent Data**: All intervals use TwelveData for reliability
 
 ### Sample Tickers (Optimized for All APIs)
 - **Mega Cap**: AAPL, MSFT, NVDA, GOOGL, AMZN
@@ -172,7 +174,8 @@ trading-robot/
 ### 2. **Detailed View Analysis** (NEW: TwelveData Only)
    - 🥇 **Daily Interval**: TwelveData Daily API (1day interval, 60 points)
    - ⚡ **30-Min Interval**: TwelveData Intraday API (30min interval, 78 points)
-   - 🔵 **Demo Fallback**: Realistic simulation for both intervals
+   - ⚡ **15-Min Interval**: TwelveData Intraday API (15min interval, 78 points)
+   - 🔵 **Demo Fallback**: Realistic simulation for all intervals
    - **Benefit**: Consistent data source ensures reliable comparisons
 
 ### 3. **Why This Architecture?**
@@ -290,11 +293,12 @@ Comprehensive analysis includes:
 - **Responsive Design**: Adapts to screen size
 - **Hover Details**: Real-time data point information
 
-#### Dual TwelveData Timeframes
+#### Multiple TwelveData Timeframes
 - **Daily Tab**: TwelveData daily analysis (up to 60 days)
 - **30-Minute Tab**: TwelveData intraday analysis (78 intervals)
+- **15-Minute Tab**: TwelveData intraday analysis (78 intervals)
 - **Tab Switching**: Seamless transition between timeframes
-- **Consistent Source**: Both tabs use TwelveData for reliability
+- **Consistent Source**: All tabs use TwelveData for reliability
 
 #### Enhanced Indicators Grid
 - **Visual Layout**: Grid display with color-coded values
@@ -362,14 +366,15 @@ Comprehensive analysis includes:
 
 ## 📝 Changelog
 
-### v4.0.0 (Current - Clean Architecture)
+### v4.0.0 (Current - Clean Architecture + 15-min Intervals)
 - 🧹 **Complete code separation**: HTML, CSS, and JavaScript in separate files
-- 🆕 **TwelveData detailed view**: Both daily and 30-minute intervals
+- 🆕 **TwelveData detailed view**: Daily, 30-minute, and 15-minute intervals
 - 🎨 **Enhanced styling**: Dedicated CSS files for each page
 - 🔧 **Improved maintainability**: Clean, modular code structure
 - ✅ **Better performance**: External file caching and optimization
 - 📱 **Mobile optimization**: Responsive design improvements
 - 🔍 **Consistent detailed analysis**: Single API source for multiple timeframes
+- ⚡ **15-minute intervals**: Added for enhanced short-term analysis
 
 ### v3.0.0 (Enhanced Detailed View)
 - 🆕 **Detailed analysis view** with interactive charts
@@ -440,7 +445,7 @@ Open `index.html` and start trading analysis with the new clean codebase!
 
 **📈 Professional Trading Analysis!** Now with clean architecture, TwelveData integration, and enhanced maintainability.
 
-**🔍 NEW in v4.0:** Complete code separation, TwelveData detailed analysis, and professional-grade file organization!
+**🔍 NEW in v4.0:** Complete code separation, TwelveData detailed analysis with 15-minute intervals, and professional-grade file organization!
 
 ---
 
