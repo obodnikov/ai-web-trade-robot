@@ -1,5 +1,523 @@
 // detailed-view.js - Enhanced Detailed Stock Analysis with TwelveData and ChatGPT Integration
 
+// Add these functions to your existing detailed-view.js file
+
+// Global variable for candlestick chart
+let candlestickChart = null;
+let detectedPatterns = [];
+
+// Update the switchTab function to include candlestick tab
+function switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    
+    // Load data if not already loaded
+    if (tabName === 'intraday' && document.getElementById('intraday-content').style.display === 'none') {
+        loadIntradayData(currentSymbol);
+    }
+    
+    if (tabName === 'intraday15' && document.getElementById('intraday15-content').style.display === 'none') {
+        loadIntraday15Data(currentSymbol);
+    }
+    
+    // NEW: Load candlestick data
+    if (tabName === 'candlestick' && document.getElementById('candlestick-content').style.display === 'none') {
+        loadCandlestickData(currentSymbol);
+    }
+    
+    // Initialize ChatGPT tab if needed
+    if (tabName === 'chatgpt') {
+        initializeChatGPTTab();
+    }
+}
+
+// Load candlestick pattern data
+async function loadCandlestickData(symbol) {
+    try {
+        document.getElementById('candlestick-loading').style.display = 'flex';
+        document.getElementById('candlestick-content').style.display = 'none';
+        document.getElementById('candlestick-error').style.display = 'none';
+        
+        // Use existing 15-minute data or load it
+        let data;
+        if (intraday15Data) {
+            data = intraday15Data;
+        } else {
+            try {
+                data = await fetchTwelveDataIntraday15(symbol);
+                intraday15Data = data;
+            } catch (error) {
+                console.log('TwelveData 15-minute failed, using demo data for candlestick patterns');
+                data = generateDemoData(symbol, 'intraday15');
+                intraday15Data = data;
+            }
+        }
+        
+        // Convert data to OHLC format for pattern detection
+        const ohlcData = convertToOHLCData(data.historicalData);
+        
+        // Detect patterns using our pattern detection engine
+        detectedPatterns = CandlestickPatterns.detectPatterns(ohlcData);
+        
+        console.log(`🕯️ Detected ${detectedPatterns.length} candlestick patterns for ${symbol}`);
+        
+        // Create candlestick chart with pattern highlighting
+        createCandlestickChart('candlestick-chart', data, detectedPatterns);
+        
+        // Update UI with pattern information
+        updateCandlestickUI(data, detectedPatterns);
+        
+        document.getElementById('candlestick-loading').style.display = 'none';
+        document.getElementById('candlestick-content').style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading candlestick data:', error);
+        document.getElementById('candlestick-loading').style.display = 'none';
+        document.getElementById('candlestick-error').style.display = 'block';
+        document.getElementById('candlestick-error').textContent = `Error loading candlestick patterns: ${error.message}`;
+    }
+}
+
+// Convert historical data to OHLC format
+function convertToOHLCData(historicalData) {
+    return historicalData.map(item => ({
+        open: item.open || item.close,
+        high: item.high || item.close,
+        low: item.low || item.close,
+        close: item.close,
+        datetime: item.datetime || item.date,
+        volume: item.volume || 0
+    }));
+}
+
+// Create candlestick chart with pattern highlighting
+function createCandlestickChart(canvasId, data, patterns) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    
+    // Destroy existing chart
+    if (candlestickChart) {
+        candlestickChart.destroy();
+    }
+    
+    const labels = data.historicalData.map(item => {
+        const date = new Date(item.datetime || item.date);
+        return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    });
+    
+    const prices = data.historicalData.map(item => item.close);
+    
+    // Calculate moving averages for overlay
+    const sma20Data = [];
+    const sma50Data = [];
+    
+    for (let i = 0; i < prices.length; i++) {
+        if (i >= 19) {
+            sma20Data.push(calculateSMA(prices.slice(0, i + 1), 20));
+        } else {
+            sma20Data.push(null);
+        }
+        
+        if (i >= 49) {
+            sma50Data.push(calculateSMA(prices.slice(0, i + 1), 50));
+        } else {
+            sma50Data.push(null);
+        }
+    }
+    
+    candlestickChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Close Price',
+                    data: prices,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 4,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#3498db',
+                    pointBorderColor: '#2980b9',
+                    pointBorderWidth: 2
+                },
+                {
+                    label: 'SMA 20',
+                    data: sma20Data,
+                    borderColor: '#2ecc71',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.1
+                },
+                {
+                    label: 'SMA 50',
+                    data: sma50Data,
+                    borderColor: '#e74c3c',
+                    borderWidth: 2,
+                    fill: false,
+                    pointRadius: 0,
+                    tension: 0.1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `${data.symbol} - 15-Minute Candlestick Pattern Analysis`,
+                    font: { size: 16, weight: 'bold' }
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleColor: 'white',
+                    bodyColor: 'white',
+                    borderColor: '#3498db',
+                    borderWidth: 1,
+                    callbacks: {
+                        afterBody: function(context) {
+                            const index = context[0].dataIndex;
+                            const pattern = patterns.find(p => p.index === index);
+                            if (pattern) {
+                                return [``, `🎯 Pattern: ${pattern.name}`, `Confidence: ${Math.round(pattern.confidence * 100)}%`, `Type: ${pattern.bullish ? 'Bullish' : 'Bearish'}`];
+                            }
+                            return [];
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Time (15-minute intervals)',
+                        font: { size: 12, weight: 'bold' }
+                    },
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                },
+                y: {
+                    beginAtZero: false,
+                    title: {
+                        display: true,
+                        text: 'Price ($)',
+                        font: { size: 12, weight: 'bold' }
+                    },
+                    grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+    
+    // Add pattern highlighting overlay
+    addPatternHighlights(candlestickChart, patterns, labels);
+    
+    return candlestickChart;
+}
+
+// Add pattern highlighting to chart
+function addPatternHighlights(chart, patterns, labels) {
+    // Store original draw function
+    const originalDraw = chart.draw;
+    
+    chart.draw = function() {
+        // Call original draw first
+        originalDraw.call(this);
+        
+        const ctx = this.ctx;
+        const xScale = this.scales.x;
+        const yScale = this.scales.y;
+        
+        ctx.save();
+        
+        patterns.forEach(pattern => {
+            const x = xScale.getPixelForValue(pattern.index);
+            const y = yScale.getPixelForValue(pattern.price);
+            
+            // Skip if coordinates are invalid
+            if (isNaN(x) || isNaN(y)) return;
+            
+            // Pattern marker circle
+            ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)';
+            ctx.strokeStyle = pattern.bullish ? '#27ae60' : '#e74c3c';
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.arc(x, y, 15, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Pattern emoji
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(pattern.emoji, x, y);
+            
+            // Pattern label for high confidence patterns
+            if (pattern.confidence > 0.85) {
+                const labelText = pattern.name;
+                const labelWidth = ctx.measureText(labelText).width + 16;
+                const labelHeight = 20;
+                const labelX = x - labelWidth / 2;
+                const labelY = y - 40;
+                
+                // Label background
+                ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)';
+                ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
+                
+                // Label text
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 11px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(labelText, x, labelY + 12);
+            }
+            
+            // Confidence indicator (small number)
+            const confidenceText = Math.round(pattern.confidence * 100) + '%';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.font = 'bold 9px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(confidenceText, x, y + 25);
+        });
+        
+        ctx.restore();
+    };
+    
+    chart.update('none');
+}
+
+// Update candlestick UI with pattern information
+function updateCandlestickUI(data, patterns) {
+    const changeFormatted = data.change ? data.change.toFixed(2) : '0.00';
+    const changePercentFormatted = data.changePercent ? data.changePercent.toFixed(2) : '0.00';
+    const changeColor = (data.change >= 0) ? '#27ae60' : '#e74c3c';
+    const changeSymbol = (data.change >= 0) ? '+' : '';
+    
+    // Update header
+    document.getElementById('candlestick-symbol').textContent = data.symbol;
+    document.getElementById('candlestick-price').textContent = `${data.price.toFixed(2)}`;
+    document.getElementById('candlestick-change').innerHTML = `
+        <div style="font-size: 0.9em; color: ${changeColor}; margin-top: 5px;">
+            ${changeSymbol}${changeFormatted} (${changeSymbol}${changePercentFormatted}%)
+        </div>
+    `;
+    
+    // Update source info
+    let sourceBadge = '';
+    if (data.source.includes('TwelveData')) {
+        sourceBadge = '<span class="data-source-badge primary-source">🥇 PRIMARY</span>';
+    } else {
+        sourceBadge = '<span class="data-source-badge demo-source">🔵 DEMO</span>';
+    }
+    
+    document.getElementById('candlestick-source-info').innerHTML = `
+        <div style="font-size: 0.8em; color: #7f8c8d;">
+            ${data.source} • Pattern Analysis${sourceBadge}
+        </div>
+    `;
+    
+    // Update detected patterns list
+    updateDetectedPatternsList(patterns);
+    
+    // Update pattern summary
+    updatePatternSummary(patterns);
+    
+    // Highlight detected patterns in reference guide
+    highlightDetectedPatternsInGuide(patterns);
+}
+
+// Update detected patterns list
+function updateDetectedPatternsList(patterns) {
+    const patternsList = document.getElementById('detected-patterns-list');
+    
+    if (patterns.length === 0) {
+        patternsList.innerHTML = '<div class="no-patterns">No patterns detected in current data</div>';
+        return;
+    }
+    
+    patternsList.innerHTML = patterns.map(pattern => {
+        const confidenceClass = pattern.confidence > 0.9 ? 'high' : pattern.confidence > 0.8 ? 'medium' : '';
+        const timeLabel = pattern.index ? `Candle ${pattern.index}` : 'Recent';
+        
+        return `
+            <div class="pattern-detected ${pattern.bullish ? 'bullish' : 'bearish'}">
+                <div class="pattern-header">
+                    <div class="pattern-name">
+                        ${pattern.emoji} ${pattern.name}
+                    </div>
+                    <div class="pattern-confidence ${confidenceClass}">
+                        ${Math.round(pattern.confidence * 100)}%
+                    </div>
+                </div>
+                <div class="pattern-description">
+                    ${pattern.description}
+                </div>
+                <div class="pattern-location">
+                    Location: ${timeLabel} • Price: ${pattern.price.toFixed(2)}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Update pattern summary statistics
+function updatePatternSummary(patterns) {
+    const summaryDiv = document.getElementById('pattern-summary');
+    
+    if (patterns.length === 0) {
+        summaryDiv.style.display = 'none';
+        return;
+    }
+    
+    summaryDiv.style.display = 'block';
+    
+    const bullishPatterns = patterns.filter(p => p.bullish);
+    const bearishPatterns = patterns.filter(p => !p.bullish);
+    const avgConfidence = patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length;
+    
+    document.getElementById('bullish-count').textContent = bullishPatterns.length;
+    document.getElementById('bearish-count').textContent = bearishPatterns.length;
+    document.getElementById('avg-confidence').textContent = Math.round(avgConfidence * 100) + '%';
+    
+    // Determine overall signal
+    const overallSignalDiv = document.getElementById('overall-signal');
+    let signal, signalClass;
+    
+    if (bullishPatterns.length > bearishPatterns.length) {
+        signal = 'BULLISH - Pattern bias suggests upward movement';
+        signalClass = 'bullish';
+    } else if (bearishPatterns.length > bullishPatterns.length) {
+        signal = 'BEARISH - Pattern bias suggests downward movement';
+        signalClass = 'bearish';
+    } else {
+        signal = 'NEUTRAL - Mixed pattern signals';
+        signalClass = '';
+    }
+    
+    overallSignalDiv.textContent = signal;
+    overallSignalDiv.className = `overall-signal ${signalClass}`;
+}
+
+// Highlight detected patterns in reference guide
+function highlightDetectedPatternsInGuide(patterns) {
+    // Reset all pattern cards
+    document.querySelectorAll('.pattern-card').forEach(card => {
+        card.classList.remove('detected');
+    });
+    
+    // Highlight detected patterns
+    patterns.forEach(pattern => {
+        const patternCard = document.querySelector(`[data-pattern="${pattern.type}"]`);
+        if (patternCard) {
+            patternCard.classList.add('detected');
+            if (pattern.bullish) {
+                patternCard.classList.add('bullish');
+            } else {
+                patternCard.classList.add('bearish');
+            }
+        }
+    });
+}
+
+// Add click handlers for pattern reference cards
+function initializePatternReferenceGuide() {
+    document.querySelectorAll('.pattern-card').forEach(card => {
+        card.addEventListener('click', function() {
+            const patternType = this.getAttribute('data-pattern');
+            showPatternInfo(patternType);
+        });
+    });
+}
+
+// Show pattern information modal or tooltip
+function showPatternInfo(patternType) {
+    const patternDefinitions = {
+        'hammer': {
+            name: 'Hammer',
+            description: 'A bullish reversal pattern with a small body and long lower shadow, indicating selling pressure followed by buying support.',
+            signal: 'Bullish Reversal',
+            reliability: 'Medium to High'
+        },
+        'dragonfly': {
+            name: 'Dragonfly Doji',
+            description: 'A doji pattern with a long lower shadow, indicating strong rejection of lower prices.',
+            signal: 'Bullish Reversal',
+            reliability: 'High'
+        },
+        'gravestone': {
+            name: 'Gravestone Doji',
+            description: 'A doji pattern with a long upper shadow, indicating strong rejection of higher prices.',
+            signal: 'Bearish Reversal',
+            reliability: 'High'
+        },
+        'morning-star': {
+            name: 'Morning Star',
+            description: 'A three-candle bullish reversal pattern consisting of a bearish candle, small-bodied candle, and bullish candle.',
+            signal: 'Bullish Reversal',
+            reliability: 'Very High'
+        },
+        'evening-star': {
+            name: 'Evening Star',
+            description: 'A three-candle bearish reversal pattern consisting of a bullish candle, small-bodied candle, and bearish candle.',
+            signal: 'Bearish Reversal',
+            reliability: 'Very High'
+        },
+        'bullish-engulfing': {
+            name: 'Bullish Engulfing',
+            description: 'A two-candle pattern where a large bullish candle completely engulfs the previous bearish candle.',
+            signal: 'Bullish Reversal',
+            reliability: 'High'
+        },
+        'bearish-engulfing': {
+            name: 'Bearish Engulfing',
+            description: 'A two-candle pattern where a large bearish candle completely engulfs the previous bullish candle.',
+            signal: 'Bearish Reversal',
+            reliability: 'High'
+        },
+        'three-white-soldiers': {
+            name: 'Three White Soldiers',
+            description: 'Three consecutive bullish candles with progressively higher closes, indicating strong buying pressure.',
+            signal: 'Bullish Continuation',
+            reliability: 'High'
+        },
+        'three-black-crows': {
+            name: 'Three Black Crows',
+            description: 'Three consecutive bearish candles with progressively lower closes, indicating strong selling pressure.',
+            signal: 'Bearish Continuation',
+            reliability: 'High'
+        }
+    };
+    
+    const pattern = patternDefinitions[patternType];
+    if (pattern) {
+        alert(`${pattern.name}\n\n${pattern.description}\n\nSignal: ${pattern.signal}\nReliability: ${pattern.reliability}`);
+    }
+}
+
+// Initialize pattern reference guide when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(initializePatternReferenceGuide, 1000);
+});
+
 // Technical Analysis Functions (same as main page)
 function calculateSMA(prices, period) {
     if (prices.length < period) return null;

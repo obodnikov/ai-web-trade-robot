@@ -1,0 +1,389 @@
+/* Add these styles to your existing detailed-view-styles.css file */
+
+/* Candlestick Tab Layout */
+.candlestick-layout {
+    display: grid;
+    grid-template-columns: 1fr 350px;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.chart-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.pattern-detection-panel {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.pattern-detection-panel h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Detected Patterns List */
+#detected-patterns-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.pattern-detected {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #27ae60;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+}
+
+.pattern-detected:hover {
+    transform: translateX(3px);
+}
+
+.pattern-detected.bearish {
+    border-left-color: #e74c3c;
+}
+
+.pattern-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.pattern-name {
+    font-weight: bold;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pattern-confidence {
+    background: #3498db;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.pattern-confidence.high {
+    background: #27ae60;
+}
+
+.pattern-confidence.medium {
+    background: #f39c12;
+}
+
+.pattern-description {
+    font-size: 0.85em;
+    color: #7f8c8d;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+.pattern-location {
+    font-size: 0.8em;
+    color: #95a5a6;
+    margin-top: 3px;
+}
+
+.no-patterns {
+    text-align: center;
+    color: #95a5a6;
+    font-style: italic;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+}
+
+/* Pattern Summary */
+.pattern-summary {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 15px;
+}
+
+.pattern-summary h4 {
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.stat-item {
+    text-align: center;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.85em;
+    opacity: 0.9;
+}
+
+.overall-signal {
+    text-align: center;
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 12px;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.overall-signal.bullish {
+    background: rgba(46, 204, 113, 0.3);
+    border: 1px solid rgba(46, 204, 113, 0.5);
+}
+
+.overall-signal.bearish {
+    background: rgba(231, 76, 60, 0.3);
+    border: 1px solid rgba(231, 76, 60, 0.5);
+}
+
+/* Pattern Reference Guide */
+.pattern-reference-guide {
+    background: #e8f4fd;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.pattern-reference-guide h3 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.patterns-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.pattern-card {
+    background: white;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.pattern-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    border-color: #3498db;
+}
+
+.pattern-card.bullish {
+    border-left: 4px solid #27ae60;
+}
+
+.pattern-card.bearish {
+    border-left: 4px solid #e74c3c;
+}
+
+.pattern-card.detected {
+    background: linear-gradient(135deg, #e8f4fd, #d6eadf);
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.pattern-card.detected.bullish {
+    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    border-color: #27ae60;
+    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
+}
+
+.pattern-card.detected.bearish {
+    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    border-color: #e74c3c;
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
+
+.pattern-icon {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.pattern-card h4 {
+    font-size: 1em;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.pattern-type {
+    font-size: 0.8em;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.pattern-card.bullish .pattern-type {
+    color: #27ae60;
+}
+
+.pattern-card.bearish .pattern-type {
+    color: #e74c3c;
+}
+
+/* Detection Badge on Pattern Cards */
+.pattern-card::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #3498db;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pattern-card.detected::before {
+    opacity: 1;
+}
+
+.pattern-card.detected.bullish::before {
+    background: #27ae60;
+    content: '✓';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.pattern-card.detected.bearish::before {
+    background: #e74c3c;
+    content: '✓';
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* Pattern Chart Tooltips */
+.pattern-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    pointer-events: none;
+    z-index: 1000;
+    max-width: 200px;
+}
+
+.pattern-tooltip::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+}
+
+/* Responsive Design for Candlestick Tab */
+@media (max-width: 1024px) {
+    .candlestick-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .pattern-detection-panel {
+        order: -1;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .patterns-grid {
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 10px;
+    }
+    
+    .pattern-card {
+        padding: 12px;
+    }
+    
+    .pattern-icon {
+        font-size: 2em;
+        margin-bottom: 8px;
+    }
+    
+    .pattern-card h4 {
+        font-size: 0.9em;
+    }
+    
+    .pattern-type {
+        font-size: 0.7em;
+    }
+    
+    .summary-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-item:last-child {
+        grid-column: span 2;
+    }
+}
+
+@media (max-width: 480px) {
+    .patterns-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .candlestick-layout {
+        gap: 15px;
+    }
+    
+    .pattern-detection-panel {
+        padding: 15px;
+    }
+    
+    .chart-section {
+        padding: 15px;
+    }
+}

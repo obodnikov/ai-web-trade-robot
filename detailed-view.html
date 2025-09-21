@@ -6,6 +6,7 @@
     <title>Trading Robot - Detailed View</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <link rel="stylesheet" href="detailed-view-styles.css">
+    <link rel="stylesheet" href="candlestick-styles.css">
 </head>
 <body>
     <div class="container">
@@ -20,6 +21,7 @@
             <button class="tab-button active" data-tab="daily" id="daily-tab-btn" onclick="switchTab('daily')">📈 Daily Interval</button>
             <button class="tab-button" data-tab="intraday" id="intraday-tab-btn" onclick="switchTab('intraday')">⚡ 30-Minute Interval</button>
             <button class="tab-button" data-tab="intraday15" id="intraday15-tab-btn" onclick="switchTab('intraday15')">🚀 15-Minute Interval</button>
+            <button class="tab-button" data-tab="candlestick" id="candlestick-tab-btn" onclick="switchTab('candlestick')">🕯️ 15-Min Patterns</button>
             <button class="tab-button" data-tab="chatgpt" id="chatgpt-tab-btn" onclick="switchTab('chatgpt')">🤖 AI Analysis</button>
         </div>
 
@@ -203,6 +205,130 @@
             </div>
         </div>
 
+        <!-- NEW: Candlestick Patterns Tab -->
+        <div id="candlestick-tab" class="tab-content">
+            <div class="detailed-card">
+                <div id="candlestick-loading" class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+                <div id="candlestick-content" style="display: none;">
+                    <div class="stock-header">
+                        <div>
+                            <div class="stock-symbol" id="candlestick-symbol">LOADING</div>
+                            <div id="candlestick-source-info"></div>
+                        </div>
+                        <div>
+                            <div class="stock-price" id="candlestick-price">$0.00</div>
+                            <div id="candlestick-change"></div>
+                        </div>
+                    </div>
+
+                    <div class="candlestick-layout">
+                        <div class="chart-section">
+                            <div class="chart-container">
+                                <canvas id="candlestick-chart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="pattern-detection-panel">
+                            <h3>🎯 Detected Patterns</h3>
+                            <div id="detected-patterns-list">
+                                <div class="no-patterns">No patterns detected yet...</div>
+                            </div>
+                            
+                            <div class="pattern-summary" id="pattern-summary" style="display: none;">
+                                <h4>📊 Pattern Summary</h4>
+                                <div class="summary-stats">
+                                    <div class="stat-item">
+                                        <span class="stat-value" id="bullish-count">0</span>
+                                        <span class="stat-label">Bullish</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-value" id="bearish-count">0</span>
+                                        <span class="stat-label">Bearish</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="stat-value" id="avg-confidence">0%</span>
+                                        <span class="stat-label">Avg Confidence</span>
+                                    </div>
+                                </div>
+                                <div class="overall-signal" id="overall-signal">
+                                    NEUTRAL - No clear pattern bias
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pattern-reference-guide">
+                        <h3>📚 Candlestick Pattern Reference</h3>
+                        <div class="patterns-grid">
+                            <div class="pattern-card bullish" data-pattern="hammer">
+                                <div class="pattern-icon">🔨</div>
+                                <h4>Hammer</h4>
+                                <div class="pattern-type">Bullish Reversal</div>
+                            </div>
+                            <div class="pattern-card bullish" data-pattern="dragonfly">
+                                <div class="pattern-icon">🐉</div>
+                                <h4>Dragonfly Doji</h4>
+                                <div class="pattern-type">Bullish Reversal</div>
+                            </div>
+                            <div class="pattern-card bearish" data-pattern="gravestone">
+                                <div class="pattern-icon">🪦</div>
+                                <h4>Gravestone Doji</h4>
+                                <div class="pattern-type">Bearish Reversal</div>
+                            </div>
+                            <div class="pattern-card bearish" data-pattern="inverted-hammer">
+                                <div class="pattern-icon">🔨</div>
+                                <h4>Inverted Hammer</h4>
+                                <div class="pattern-type">Bearish Reversal</div>
+                            </div>
+                            <div class="pattern-card bullish" data-pattern="tweezer-bottom">
+                                <div class="pattern-icon">🤏</div>
+                                <h4>Tweezer Bottom</h4>
+                                <div class="pattern-type">Bullish Reversal</div>
+                            </div>
+                            <div class="pattern-card bearish" data-pattern="tweezer-top">
+                                <div class="pattern-icon">🤏</div>
+                                <h4>Tweezer Top</h4>
+                                <div class="pattern-type">Bearish Reversal</div>
+                            </div>
+                            <div class="pattern-card bullish" data-pattern="morning-star">
+                                <div class="pattern-icon">🌟</div>
+                                <h4>Morning Star</h4>
+                                <div class="pattern-type">Bullish Reversal</div>
+                            </div>
+                            <div class="pattern-card bearish" data-pattern="evening-star">
+                                <div class="pattern-icon">🌙</div>
+                                <h4>Evening Star</h4>
+                                <div class="pattern-type">Bearish Reversal</div>
+                            </div>
+                            <div class="pattern-card bullish" data-pattern="bullish-engulfing">
+                                <div class="pattern-icon">🐂</div>
+                                <h4>Bullish Engulfing</h4>
+                                <div class="pattern-type">Bullish Reversal</div>
+                            </div>
+                            <div class="pattern-card bearish" data-pattern="bearish-engulfing">
+                                <div class="pattern-icon">🐻</div>
+                                <h4>Bearish Engulfing</h4>
+                                <div class="pattern-type">Bearish Reversal</div>
+                            </div>
+                            <div class="pattern-card bullish" data-pattern="three-white-soldiers">
+                                <div class="pattern-icon">⚪</div>
+                                <h4>Three White Soldiers</h4>
+                                <div class="pattern-type">Bullish Continuation</div>
+                            </div>
+                            <div class="pattern-card bearish" data-pattern="three-black-crows">
+                                <div class="pattern-icon">⚫</div>
+                                <h4>Three Black Crows</h4>
+                                <div class="pattern-type">Bearish Continuation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="candlestick-error" class="error-message" style="display: none;"></div>
+            </div>
+        </div>
+
         <!-- ChatGPT AI Analysis Tab -->
         <div id="chatgpt-tab" class="tab-content">
             <div class="detailed-card">
@@ -263,6 +389,8 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="candlestick-patterns.js"></script>
     <script src="detailed-view.js"></script>
+    <script src="debug.js"></script>
 </body>
 </html>
