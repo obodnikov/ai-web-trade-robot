@@ -1,5 +1,8 @@
 // fixed-detailed-view.js - Replace your detailed-view.js content with this
 
+// Configuration variables
+const CANDLESTICK_CHART_CANDLES = 20; // Number of candles to show on chart
+
 // Technical Analysis Functions
 function calculateSMA(prices, period) {
     if (prices.length < period) return null;
@@ -430,30 +433,52 @@ function createCandlestickChart(canvasId, data, patterns) {
         candlestickChart.destroy();
     }
     
-    const labels = data.historicalData.map(item => {
+    // Filter to last N candles for better readability
+    const startIndex = Math.max(0, data.historicalData.length - CANDLESTICK_CHART_CANDLES);
+    const filteredData = data.historicalData.slice(startIndex);
+    
+    const labels = filteredData.map(item => {
         const date = new Date(item.datetime || item.date);
         return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     });
     
-    const prices = data.historicalData.map(item => parseFloat(item.close));
+    const prices = filteredData.map(item => parseFloat(item.close));
     
-    // Calculate moving averages for overlay
+    // Calculate moving averages for filtered data
     const sma20Data = [];
     const sma50Data = [];
     
-    for (let i = 0; i < prices.length; i++) {
+    // Use original full dataset for SMA calculation, then slice the results
+    const allPrices = data.historicalData.map(item => parseFloat(item.close));
+    const fullSma20 = [];
+    const fullSma50 = [];
+    
+    for (let i = 0; i < allPrices.length; i++) {
         if (i >= 19) {
-            sma20Data.push(calculateSMA(prices.slice(0, i + 1), 20));
+            fullSma20.push(calculateSMA(allPrices.slice(0, i + 1), 20));
         } else {
-            sma20Data.push(null);
+            fullSma20.push(null);
         }
         
         if (i >= 49) {
-            sma50Data.push(calculateSMA(prices.slice(0, i + 1), 50));
+            fullSma50.push(calculateSMA(allPrices.slice(0, i + 1), 50));
         } else {
-            sma50Data.push(null);
+            fullSma50.push(null);
         }
     }
+    
+    // Extract SMA values for the filtered period
+    const sma20Filtered = fullSma20.slice(startIndex);
+    const sma50Filtered = fullSma50.slice(startIndex);
+    
+    // Filter patterns to only those visible in the chart window
+    const visiblePatterns = patterns.filter(pattern => pattern.index >= startIndex);
+    
+    // Adjust pattern indices to match filtered data
+    const adjustedPatterns = visiblePatterns.map(pattern => ({
+        ...pattern,
+        adjustedIndex: pattern.index - startIndex
+    }));
     
     candlestickChart = new Chart(ctx, {
         type: 'line',
@@ -476,7 +501,7 @@ function createCandlestickChart(canvasId, data, patterns) {
                 },
                 {
                     label: 'SMA 20',
-                    data: sma20Data,
+                    data: sma20Filtered,
                     borderColor: '#2ecc71',
                     borderWidth: 2,
                     fill: false,
@@ -485,7 +510,7 @@ function createCandlestickChart(canvasId, data, patterns) {
                 },
                 {
                     label: 'SMA 50',
-                    data: sma50Data,
+                    data: sma50Filtered,
                     borderColor: '#3498db',
                     borderWidth: 2,
                     fill: false,
@@ -500,7 +525,7 @@ function createCandlestickChart(canvasId, data, patterns) {
             plugins: {
                 title: {
                     display: true,
-                    text: `${data.symbol} - 15-Minute Candlestick Pattern Analysis`,
+                    text: `${data.symbol} - 15-Minute Candlestick Pattern Analysis (Last ${CANDLESTICK_CHART_CANDLES} Candles)`,
                     font: { size: 16, weight: 'bold' },
                     color: '#2c3e50'
                 },
@@ -511,17 +536,34 @@ function createCandlestickChart(canvasId, data, patterns) {
                 tooltip: {
                     mode: 'index',
                     intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.95)',
                     titleColor: 'white',
                     bodyColor: 'white',
                     borderColor: '#3498db',
-                    borderWidth: 1,
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    padding: 15,
+                    bodySpacing: 6,
+                    titleSpacing: 6,
+                    caretPadding: 10,
+                    yAlign: 'top',
+                    xAlign: 'center',
+                    position: 'average',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
                     callbacks: {
                         afterBody: function(context) {
                             const index = context[0].dataIndex;
-                            const pattern = patterns.find(p => p.index === index);
+                            const originalIndex = index + startIndex;
+                            const pattern = patterns.find(p => p.index === originalIndex);
                             if (pattern) {
-                                return [``, `🎯 Pattern: ${pattern.name}`, `Confidence: ${Math.round(pattern.confidence * 100)}%`, `Type: ${pattern.bullish ? 'Bullish' : 'Bearish'}`];
+                                return [
+                                    ``, 
+                                    `🎯 Pattern: ${pattern.emoji} ${pattern.name}`, 
+                                    `Confidence: ${Math.round(pattern.confidence * 100)}%`, 
+                                    `Type: ${pattern.bullish ? 'Bullish ⬆️' : 'Bearish ⬇️'}`,
+                                    `Description: ${pattern.description}`
+                                ];
                             }
                             return [];
                         }
@@ -532,7 +574,7 @@ function createCandlestickChart(canvasId, data, patterns) {
                 x: {
                     title: {
                         display: true,
-                        text: 'Time (15-minute intervals)',
+                        text: `Time (15-minute intervals) - Showing last ${CANDLESTICK_CHART_CANDLES} candles`,
                         font: { size: 12, weight: 'bold' }
                     },
                     grid: { color: 'rgba(0, 0, 0, 0.1)' }
@@ -554,12 +596,12 @@ function createCandlestickChart(canvasId, data, patterns) {
         }
     });
     
-    // Add pattern highlighting
-    if (patterns.length > 0) {
-        addPatternHighlights(candlestickChart, patterns, labels);
+    // Add pattern highlighting with cleaner markers (no labels)
+    if (adjustedPatterns.length > 0) {
+        addPatternHighlights(candlestickChart, adjustedPatterns, labels);
     }
     
-    console.log(`📈 Chart created with ${patterns.length} pattern highlights`);
+    console.log(`📈 Chart created with ${CANDLESTICK_CHART_CANDLES} candles and ${adjustedPatterns.length} visible patterns`);
     return candlestickChart;
 }
 
@@ -580,43 +622,37 @@ function addPatternHighlights(chart, patterns, labels) {
         
         patterns.forEach(pattern => {
             try {
-                const x = xScale.getPixelForValue(pattern.index);
+                const x = xScale.getPixelForValue(pattern.adjustedIndex);
                 const y = yScale.getPixelForValue(pattern.price);
                 
                 if (isNaN(x) || isNaN(y)) return;
                 
-                // Pattern marker circle
+                // Pattern marker circle - larger and more visible
                 ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)';
                 ctx.strokeStyle = pattern.bullish ? '#27ae60' : '#e74c3c';
                 ctx.lineWidth = 3;
                 
                 ctx.beginPath();
-                ctx.arc(x, y, 15, 0, 2 * Math.PI);
+                ctx.arc(x, y, 12, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.stroke();
                 
-                // Pattern emoji
+                // Pattern emoji - slightly larger
                 ctx.fillStyle = 'white';
-                ctx.font = 'bold 16px Arial';
+                ctx.font = 'bold 14px Arial';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(pattern.emoji, x, y);
                 
-                // High confidence patterns get labels
+                // Add subtle glow effect for high confidence patterns
                 if (pattern.confidence > 0.85) {
-                    const labelText = pattern.name;
-                    const labelWidth = ctx.measureText(labelText).width + 16;
-                    const labelHeight = 20;
-                    const labelX = x - labelWidth / 2;
-                    const labelY = y - 40;
-                    
-                    ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)';
-                    ctx.fillRect(labelX, labelY, labelWidth, labelHeight);
-                    
-                    ctx.fillStyle = 'white';
-                    ctx.font = 'bold 11px Arial';
-                    ctx.fillText(labelText, x, labelY + 12);
+                    ctx.beginPath();
+                    ctx.arc(x, y, 18, 0, 2 * Math.PI);
+                    ctx.strokeStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.3)' : 'rgba(231, 76, 60, 0.3)';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
                 }
+                
             } catch (e) {
                 console.warn('Pattern highlight error:', e);
             }
