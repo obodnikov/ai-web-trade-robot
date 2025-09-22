@@ -1,66 +1,76 @@
-/* Add these styles to your existing detailed-view-styles.css file */
+/* candlestick-styles.css - Styles for candlestick pattern analysis */
 
-/* Candlestick Tab Layout */
+/* Candlestick Layout */
 .candlestick-layout {
     display: grid;
-    grid-template-columns: 1fr 350px;
+    grid-template-columns: 2fr 1fr;
     gap: 25px;
     margin-bottom: 25px;
 }
 
 .chart-section {
     background: #f8f9fa;
+    padding: 15px;
     border-radius: 10px;
-    padding: 20px;
+    border: 2px solid #e9ecef;
 }
 
 .pattern-detection-panel {
-    background: #f8f9fa;
-    border-radius: 10px;
+    background: #ffffff;
     padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    max-height: 500px;
+    overflow-y: auto;
 }
 
 .pattern-detection-panel h3 {
     color: #2c3e50;
     margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 1.2em;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 8px;
 }
 
-/* Detected Patterns List */
-#detected-patterns-list {
-    max-height: 300px;
-    overflow-y: auto;
+/* Detected Patterns */
+.detected-patterns-list {
     margin-bottom: 20px;
 }
 
 .pattern-detected {
-    background: white;
+    background: #f8f9fa;
     border-radius: 8px;
-    padding: 12px 15px;
-    margin-bottom: 10px;
-    border-left: 4px solid #27ae60;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: transform 0.2s ease;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-left: 5px solid #3498db;
+    transition: all 0.3s ease;
 }
 
-.pattern-detected:hover {
-    transform: translateX(3px);
+.pattern-detected.bullish {
+    border-left-color: #27ae60;
+    background: linear-gradient(135deg, #d5f4e6 0%, #f8f9fa 100%);
 }
 
 .pattern-detected.bearish {
     border-left-color: #e74c3c;
+    background: linear-gradient(135deg, #ffeaa7 0%, #f8f9fa 100%);
+}
+
+.pattern-detected:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .pattern-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
 }
 
 .pattern-name {
+    font-size: 1.1em;
     font-weight: bold;
     color: #2c3e50;
     display: flex;
@@ -71,9 +81,9 @@
 .pattern-confidence {
     background: #3498db;
     color: white;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-size: 0.85em;
     font-weight: bold;
 }
 
@@ -86,40 +96,44 @@
 }
 
 .pattern-description {
-    font-size: 0.85em;
-    color: #7f8c8d;
-    margin-top: 5px;
+    color: #5a6c7d;
+    font-size: 0.9em;
     line-height: 1.4;
+    margin-bottom: 8px;
 }
 
 .pattern-location {
     font-size: 0.8em;
-    color: #95a5a6;
-    margin-top: 3px;
+    color: #7f8c8d;
+    font-style: italic;
+    background: rgba(52, 152, 219, 0.1);
+    padding: 4px 8px;
+    border-radius: 4px;
 }
 
 .no-patterns {
     text-align: center;
-    color: #95a5a6;
+    padding: 25px;
+    color: #7f8c8d;
     font-style: italic;
-    padding: 20px;
-    background: white;
+    background: linear-gradient(135deg, #f8f9fa, #ecf0f1);
     border-radius: 8px;
-    border: 2px dashed #dee2e6;
+    border: 2px dashed #bdc3c7;
 }
 
 /* Pattern Summary */
 .pattern-summary {
-    background: linear-gradient(135deg, #667eea, #764ba2);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    border-radius: 10px;
     padding: 20px;
-    margin-top: 15px;
+    border-radius: 10px;
+    margin-top: 20px;
 }
 
 .pattern-summary h4 {
+    color: white;
     margin-bottom: 15px;
-    text-align: center;
+    font-size: 1.1em;
 }
 
 .summary-stats {
@@ -131,259 +145,235 @@
 
 .stat-item {
     text-align: center;
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.15);
+    padding: 10px;
     border-radius: 8px;
-    padding: 12px;
+    backdrop-filter: blur(5px);
 }
 
 .stat-value {
     display: block;
-    font-size: 1.5em;
+    font-size: 1.8em;
     font-weight: bold;
-    margin-bottom: 5px;
+    color: #ffffff;
 }
 
 .stat-label {
+    display: block;
     font-size: 0.85em;
     opacity: 0.9;
+    margin-top: 4px;
 }
 
 .overall-signal {
-    text-align: center;
-    background: rgba(255,255,255,0.1);
-    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.2);
     padding: 12px;
+    border-radius: 8px;
+    text-align: center;
     font-weight: bold;
     font-size: 1.1em;
+    backdrop-filter: blur(5px);
 }
 
 .overall-signal.bullish {
-    background: rgba(46, 204, 113, 0.3);
-    border: 1px solid rgba(46, 204, 113, 0.5);
+    background: rgba(39, 174, 96, 0.8);
 }
 
 .overall-signal.bearish {
-    background: rgba(231, 76, 60, 0.3);
-    border: 1px solid rgba(231, 76, 60, 0.5);
+    background: rgba(231, 76, 60, 0.8);
 }
 
 /* Pattern Reference Guide */
 .pattern-reference-guide {
-    background: #e8f4fd;
-    border-radius: 10px;
-    padding: 20px;
-    margin-top: 20px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 15px;
+    margin-top: 25px;
+    border: 1px solid #e9ecef;
 }
 
 .pattern-reference-guide h3 {
     color: #2c3e50;
     margin-bottom: 20px;
+    font-size: 1.4em;
     text-align: center;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 10px;
 }
 
 .patterns-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px;
 }
 
 .pattern-card {
-    background: white;
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
     border-radius: 10px;
     padding: 15px;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    border: 2px solid transparent;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
 }
 
 .pattern-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
     border-color: #3498db;
 }
 
 .pattern-card.bullish {
-    border-left: 4px solid #27ae60;
+    border-left: 5px solid #27ae60;
 }
 
 .pattern-card.bearish {
-    border-left: 4px solid #e74c3c;
+    border-left: 5px solid #e74c3c;
 }
 
 .pattern-card.detected {
-    background: linear-gradient(135deg, #e8f4fd, #d6eadf);
-    border-color: #3498db;
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border-color: #2980b9;
+    animation: detected-glow 2s ease-in-out infinite alternate;
 }
 
 .pattern-card.detected.bullish {
-    background: linear-gradient(135deg, #d4edda, #c3e6cb);
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
     border-color: #27ae60;
-    box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.2);
 }
 
 .pattern-card.detected.bearish {
-    background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
     border-color: #e74c3c;
-    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.2);
+}
+
+@keyframes detected-glow {
+    0% { box-shadow: 0 6px 20px rgba(52, 152, 219, 0.3); }
+    100% { box-shadow: 0 6px 25px rgba(52, 152, 219, 0.6); }
+}
+
+.pattern-card.detected.bullish {
+    animation-name: bullish-glow;
+}
+
+.pattern-card.detected.bearish {
+    animation-name: bearish-glow;
+}
+
+@keyframes bullish-glow {
+    0% { box-shadow: 0 6px 20px rgba(39, 174, 96, 0.3); }
+    100% { box-shadow: 0 6px 25px rgba(39, 174, 96, 0.6); }
+}
+
+@keyframes bearish-glow {
+    0% { box-shadow: 0 6px 20px rgba(231, 76, 60, 0.3); }
+    100% { box-shadow: 0 6px 25px rgba(231, 76, 60, 0.6); }
 }
 
 .pattern-icon {
     font-size: 2.5em;
     margin-bottom: 10px;
-    display: block;
 }
 
 .pattern-card h4 {
-    font-size: 1em;
     color: #2c3e50;
     margin-bottom: 8px;
-    font-weight: 600;
+    font-size: 1em;
+}
+
+.pattern-card.detected h4 {
+    color: white;
 }
 
 .pattern-type {
-    font-size: 0.8em;
+    font-size: 0.85em;
     color: #7f8c8d;
-    text-transform: uppercase;
     font-weight: 500;
-    letter-spacing: 0.5px;
 }
 
-.pattern-card.bullish .pattern-type {
-    color: #27ae60;
+.pattern-card.detected .pattern-type {
+    color: rgba(255, 255, 255, 0.9);
 }
 
-.pattern-card.bearish .pattern-type {
-    color: #e74c3c;
-}
-
-/* Detection Badge on Pattern Cards */
 .pattern-card::before {
     content: '';
     position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #3498db;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: rotate(45deg);
+    transition: all 0.5s;
     opacity: 0;
-    transition: opacity 0.3s ease;
 }
 
-.pattern-card.detected::before {
-    opacity: 1;
+.pattern-card:hover::before {
+    animation: shine 0.5s ease-in-out;
 }
 
-.pattern-card.detected.bullish::before {
-    background: #27ae60;
-    content: '✓';
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
+@keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
 }
 
-.pattern-card.detected.bearish::before {
-    background: #e74c3c;
-    content: '✓';
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-/* Pattern Chart Tooltips */
-.pattern-tooltip {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.9);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 0.85em;
-    pointer-events: none;
-    z-index: 1000;
-    max-width: 200px;
-}
-
-.pattern-tooltip::after {
-    content: '';
-    position: absolute;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: rgba(0, 0, 0, 0.9);
-}
-
-/* Responsive Design for Candlestick Tab */
-@media (max-width: 1024px) {
+/* Responsive Design */
+@media (max-width: 768px) {
     .candlestick-layout {
         grid-template-columns: 1fr;
     }
     
     .pattern-detection-panel {
+        max-height: none;
         order: -1;
+    }
+    
+    .patterns-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 10px;
+    }
+    
+    .pattern-card {
+        padding: 10px;
+    }
+    
+    .pattern-icon {
+        font-size: 2em;
     }
     
     .summary-stats {
         grid-template-columns: repeat(3, 1fr);
         gap: 10px;
     }
-}
-
-@media (max-width: 768px) {
-    .patterns-grid {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 10px;
+    
+    .stat-value {
+        font-size: 1.5em;
     }
     
-    .pattern-card {
+    .pattern-detected {
         padding: 12px;
     }
     
-    .pattern-icon {
-        font-size: 2em;
-        margin-bottom: 8px;
-    }
-    
-    .pattern-card h4 {
-        font-size: 0.9em;
-    }
-    
-    .pattern-type {
-        font-size: 0.7em;
-    }
-    
-    .summary-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .stat-item:last-child {
-        grid-column: span 2;
+    .pattern-name {
+        font-size: 1em;
     }
 }
 
 @media (max-width: 480px) {
+    .summary-stats {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
     .patterns-grid {
         grid-template-columns: repeat(2, 1fr);
     }
     
-    .candlestick-layout {
-        gap: 15px;
-    }
-    
-    .pattern-detection-panel {
-        padding: 15px;
-    }
-    
-    .chart-section {
+    .pattern-reference-guide {
         padding: 15px;
     }
 }
