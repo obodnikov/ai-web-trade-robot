@@ -6,6 +6,631 @@
 let candlestickChart = null;
 let detectedPatterns = [];
 
+// ADD these missing functions to your detailed-view.js file
+
+// Create chart specifically for real data
+function createRealCandlestickChart(canvasId, realData, patterns) {
+    try {
+        console.log('📊 Creating chart with REAL TwelveData...');
+        
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) throw new Error('Canvas not found');
+        
+        // Destroy existing chart
+        if (window.candlestickChart) {
+            window.candlestickChart.destroy();
+        }
+        
+        // Process real data
+        const labels = realData.historicalData.map(item => {
+            const date = new Date(item.datetime);
+            return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        });
+        
+        const prices = realData.historicalData.map(item => parseFloat(item.close));
+        
+        // Create chart
+        window.candlestickChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Real Close Price (TwelveData)',
+                    data: prices,
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 4,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${realData.symbol} - REAL 15-Minute Patterns (TwelveData)`,
+                        font: { size: 16, weight: 'bold' },
+                        color: '#2c3e50'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                const index = context[0].dataIndex;
+                                const pattern = patterns.find(p => p.index === index);
+                                if (pattern) {
+                                    return [``, `🎯 ${pattern.name}`, `${Math.round(pattern.confidence * 100)}% confidence`];
+                                }
+                                return [];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Real Price ($)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Time (15-min intervals - TwelveData)' }
+                    }
+                }
+            }
+        });
+        
+        // Add pattern highlighting
+        if (patterns.length > 0) {
+            addRealPatternHighlights(window.candlestickChart, patterns);
+        }
+        
+        console.log('✅ Real data chart created successfully');
+        
+    } catch (error) {
+        console.error('❌ Real chart creation failed:', error);
+        
+        // Show fallback message
+        const chartContainer = document.querySelector('#candlestick-chart').parentElement;
+        if (chartContainer) {
+            chartContainer.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 400px; color: #7f8c8d;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 10px;">📊</div>
+                        <h3>Chart Creation Error</h3>
+                        <p>Unable to create chart: ${error.message}</p>
+                        <button onclick="loadCandlestickDataForced('${realData.symbol}')" 
+                                style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-top: 10px;">
+                            🔄 Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }
+}
+
+// Update UI specifically for real data
+function updateRealCandlestickUI(realData, patterns) {
+    try {
+        console.log('🎨 Updating UI with REAL data...');
+        
+        // Update header with real data
+        const symbolEl = document.getElementById('candlestick-symbol');
+        const priceEl = document.getElementById('candlestick-price');
+        const changeEl = document.getElementById('candlestick-change');
+        const sourceEl = document.getElementById('candlestick-source-info');
+        
+        if (symbolEl) symbolEl.textContent = realData.symbol;
+        if (priceEl) priceEl.textContent = `$${realData.price.toFixed(2)}`;
+        
+        if (changeEl) {
+            const changeFormatted = realData.change ? realData.change.toFixed(2) : '0.00';
+            const changePercentFormatted = realData.changePercent ? realData.changePercent.toFixed(2) : '0.00';
+            const changeColor = (realData.change >= 0) ? '#27ae60' : '#e74c3c';
+            const changeSymbol = (realData.change >= 0) ? '+' : '';
+            
+            changeEl.innerHTML = `
+                <div style="font-size: 0.9em; color: ${changeColor}; margin-top: 5px;">
+                    ${changeSymbol}${changeFormatted} (${changeSymbol}${changePercentFormatted}%)
+                </div>
+            `;
+        }
+        
+        // FORCE show real data source
+        if (sourceEl) {
+            sourceEl.innerHTML = `
+                <div style="font-size: 0.8em; color: #7f8c8d;">
+                    <strong style="color: #27ae60;">TwelveData 15-minute intervals</strong> • Real Market Data • Pattern Analysis
+                    <span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-left: 8px; font-weight: bold;">🥇 REAL DATA</span>
+                </div>
+            `;
+        }
+        
+        // Update patterns with real data context
+        updateRealPatternsList(patterns, realData);
+        
+        console.log('✅ UI updated with REAL data indicators');
+        
+    } catch (error) {
+        console.error('❌ Real UI update failed:', error);
+    }
+}
+
+// Update patterns list with real data context
+function updateRealPatternsList(patterns, realData) {
+    try {
+        const patternsList = document.getElementById('detected-patterns-list');
+        if (!patternsList) return;
+        
+        if (patterns.length === 0) {
+            patternsList.innerHTML = `
+                <div class="no-patterns">
+                    <div style="margin-bottom: 10px;">📊 No patterns detected in current real market data</div>
+                    <div style="font-size: 0.85em; color: #7f8c8d;">
+                        Analyzed ${realData.historicalData.length} real 15-minute intervals from TwelveData
+                    </div>
+                </div>
+            `;
+        } else {
+            patternsList.innerHTML = patterns.map(pattern => `
+                <div class="pattern-detected ${pattern.bullish ? 'bullish' : 'bearish'}">
+                    <div class="pattern-header">
+                        <div class="pattern-name">
+                            ${pattern.emoji} ${pattern.name}
+                            <span style="background: #27ae60; color: white; padding: 1px 4px; border-radius: 6px; font-size: 0.7em; margin-left: 5px;">REAL</span>
+                        </div>
+                        <div class="pattern-confidence">
+                            ${Math.round(pattern.confidence * 100)}%
+                        </div>
+                    </div>
+                    <div class="pattern-description">
+                        ${pattern.description}
+                    </div>
+                    <div class="pattern-location">
+                        📍 Real Market Data • Interval ${pattern.index} • Price: $${pattern.price.toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Update summary with real data context
+        updateRealPatternSummary(patterns, realData);
+        
+    } catch (error) {
+        console.error('❌ Real patterns list update failed:', error);
+    }
+}
+
+// Update summary with real data context  
+function updateRealPatternSummary(patterns, realData) {
+    try {
+        const summaryDiv = document.getElementById('pattern-summary');
+        if (!summaryDiv) return;
+        
+        if (patterns.length === 0) {
+            summaryDiv.style.display = 'none';
+            return;
+        }
+        
+        summaryDiv.style.display = 'block';
+        
+        const bullishPatterns = patterns.filter(p => p.bullish);
+        const bearishPatterns = patterns.filter(p => !p.bullish);
+        const avgConfidence = patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length;
+        
+        const bullishEl = document.getElementById('bullish-count');
+        const bearishEl = document.getElementById('bearish-count');
+        const confidenceEl = document.getElementById('avg-confidence');
+        const signalEl = document.getElementById('overall-signal');
+        
+        if (bullishEl) bullishEl.textContent = bullishPatterns.length;
+        if (bearishEl) bearishEl.textContent = bearishPatterns.length;
+        if (confidenceEl) confidenceEl.textContent = Math.round(avgConfidence * 100) + '%';
+        
+        if (signalEl) {
+            let signal, signalClass;
+            if (bullishPatterns.length > bearishPatterns.length) {
+                signal = 'BULLISH - Real market patterns suggest upward movement';
+                signalClass = 'bullish';
+            } else if (bearishPatterns.length > bullishPatterns.length) {
+                signal = 'BEARISH - Real market patterns suggest downward movement';
+                signalClass = 'bearish';
+            } else {
+                signal = 'NEUTRAL - Mixed real market pattern signals';
+                signalClass = '';
+            }
+            
+            signalEl.textContent = signal;
+            signalEl.className = `overall-signal ${signalClass}`;
+        }
+        
+    } catch (error) {
+        console.error('❌ Real pattern summary update failed:', error);
+    }
+}
+
+// Add pattern highlighting for real data
+function addRealPatternHighlights(chart, patterns) {
+    if (!chart || !patterns || patterns.length === 0) return;
+    
+    const originalDraw = chart.draw;
+    
+    chart.draw = function() {
+        originalDraw.call(this);
+        
+        const ctx = this.ctx;
+        const xScale = this.scales.x;
+        const yScale = this.scales.y;
+        
+        if (!ctx || !xScale || !yScale) return;
+        
+        ctx.save();
+        
+        patterns.forEach(pattern => {
+            try {
+                const x = xScale.getPixelForValue(pattern.index);
+                const y = yScale.getPixelForValue(pattern.price);
+                
+                if (isNaN(x) || isNaN(y)) return;
+                
+                // Larger, more visible markers for real data
+                ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.95)' : 'rgba(231, 76, 60, 0.95)';
+                ctx.strokeStyle = pattern.bullish ? '#27ae60' : '#e74c3c';
+                ctx.lineWidth = 4;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 18, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Pattern emoji
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(pattern.emoji, x, y);
+                
+                // "REAL" indicator
+                ctx.fillStyle = 'rgba(52, 152, 219, 0.9)';
+                ctx.font = 'bold 8px Arial';
+                ctx.fillText('REAL', x, y + 25);
+                
+                // High confidence patterns get labels
+                if (pattern.confidence > 0.85) {
+                    ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)';
+                    const labelText = pattern.name;
+                    const labelWidth = ctx.measureText(labelText).width + 16;
+                    ctx.fillRect(x - labelWidth/2, y - 45, labelWidth, 18);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 10px Arial';
+                    ctx.fillText(labelText, x, y - 36);
+                }
+                
+            } catch (e) {
+                console.warn('Pattern highlight error:', e);
+            }
+        });
+        
+        ctx.restore();
+    };
+    
+    chart.update('none');
+}
+
+// Simple fallback chart creation if real chart fails
+function createFallbackCandlestickChart(canvasId, data, patterns) {
+    try {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        
+        // Destroy existing chart
+        if (window.candlestickChart) {
+            window.candlestickChart.destroy();
+        }
+        
+        const labels = data.historicalData.map((item, index) => `T${index}`);
+        const prices = data.historicalData.map(item => parseFloat(item.close));
+        
+        window.candlestickChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: `${data.symbol} Close Price`,
+                    data: prices,
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${data.symbol} - Pattern Analysis`
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Price ($)' }
+                    }
+                }
+            }
+        });
+        
+        console.log('✅ Fallback chart created');
+        
+    } catch (error) {
+        console.error('❌ Fallback chart creation failed:', error);
+    }
+}
+
+console.log('✅ All missing candlestick functions added');
+
+// ADD this to the very beginning of your detailed-view.js file (after global variables)
+
+// Ensure currentSymbol is properly set from URL
+function ensureCurrentSymbol() {
+    if (!window.currentSymbol) {
+        // Get symbol from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlSymbol = urlParams.get('symbol');
+        
+        if (urlSymbol) {
+            window.currentSymbol = urlSymbol.toUpperCase();
+            console.log(`✅ Symbol set from URL: ${window.currentSymbol}`);
+        } else {
+            // Fallback to a default symbol
+            window.currentSymbol = 'AAPL';
+            console.log(`⚠️ No symbol in URL, using default: ${window.currentSymbol}`);
+        }
+    }
+    
+    return window.currentSymbol;
+}
+
+// REPLACE your forced candlestick loading function with this one:
+
+async function loadCandlestickDataForced(symbolParam) {
+    // Ensure we have a valid symbol
+    const symbol = symbolParam || ensureCurrentSymbol();
+    
+    console.log(`🕯️ FORCED loading candlestick data for symbol: ${symbol}`);
+    
+    if (!symbol || symbol === 'undefined') {
+        console.error('❌ Invalid symbol for candlestick loading');
+        const errorEl = document.getElementById('candlestick-error');
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.innerHTML = `
+                <div style="color: #e74c3c; text-align: center; padding: 20px;">
+                    <h4>Symbol Error</h4>
+                    <p>No valid stock symbol found. Please return to main page and select a stock.</p>
+                </div>
+            `;
+        }
+        return;
+    }
+    
+    try {
+        const loadingEl = document.getElementById('candlestick-loading');
+        const contentEl = document.getElementById('candlestick-content');
+        const errorEl = document.getElementById('candlestick-error');
+        
+        loadingEl.style.display = 'flex';
+        contentEl.style.display = 'none';
+        errorEl.style.display = 'none';
+        
+        // STEP 1: Check existing data first
+        console.log('🔍 Checking for existing 15-minute data...');
+        console.log('Current intraday15Data:', window.intraday15Data);
+        console.log('Looking for symbol:', symbol);
+        
+        let realData = null;
+        
+        // Check if we have existing data for this symbol
+        if (window.intraday15Data && 
+            window.intraday15Data.historicalData && 
+            window.intraday15Data.symbol === symbol &&
+            window.intraday15Data.source && 
+            window.intraday15Data.source.includes('TwelveData')) {
+            
+            console.log('✅ Found existing REAL TwelveData for symbol:', symbol);
+            realData = window.intraday15Data;
+            
+        } else {
+            console.log('❌ No matching real 15-minute data found, forcing load...');
+            console.log('Expected symbol:', symbol);
+            console.log('Existing data symbol:', window.intraday15Data?.symbol);
+            
+            // Show specific loading message
+            loadingEl.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 10px; color: #2c3e50;">Loading real market data for ${symbol}...</div>
+                </div>
+            `;
+            
+            // Force load TwelveData with explicit symbol
+            try {
+                console.log(`📡 Force fetching TwelveData 15-minute for ${symbol}...`);
+                realData = await fetchTwelveDataIntraday15(symbol);
+                
+                // Store it globally with symbol verification
+                window.intraday15Data = realData;
+                
+                console.log('✅ Successfully force-loaded TwelveData');
+                console.log('Loaded data for symbol:', realData.symbol);
+                console.log('Data source:', realData.source);
+                console.log('Data points:', realData.historicalData.length);
+                
+            } catch (apiError) {
+                console.error('❌ Failed to force load TwelveData:', apiError);
+                
+                // Try to use any existing data as fallback
+                if (window.intraday15Data && window.intraday15Data.historicalData) {
+                    console.log('🔄 Using existing data as fallback...');
+                    realData = window.intraday15Data;
+                    realData.symbol = symbol; // Update symbol
+                } else {
+                    throw new Error(`Cannot load real market data for ${symbol}: ${apiError.message}`);
+                }
+            }
+        }
+        
+        // STEP 2: Validate data
+        if (!realData || !realData.historicalData || realData.historicalData.length < 10) {
+            throw new Error(`Insufficient real market data for ${symbol}`);
+        }
+        
+        console.log(`📊 Using data for: ${realData.symbol}`);
+        console.log(`📈 Source: ${realData.source}`);
+        console.log(`📊 Data points: ${realData.historicalData.length}`);
+        console.log(`💰 Current price: $${realData.price.toFixed(2)}`);
+        
+        // STEP 3: Convert to OHLC and detect patterns
+        const ohlcData = realData.historicalData.map((item, index) => {
+            return {
+                open: parseFloat(item.open),
+                high: parseFloat(item.high), 
+                low: parseFloat(item.low),
+                close: parseFloat(item.close),
+                datetime: item.datetime,
+                volume: parseInt(item.volume || 0)
+            };
+        });
+        
+        console.log('🔄 OHLC data prepared:', ohlcData.length, 'candles');
+        
+        // Detect patterns
+        let patterns = [];
+        if (window.CandlestickPatterns) {
+            patterns = window.CandlestickPatterns.detectPatterns(ohlcData);
+            console.log(`🎯 Detected ${patterns.length} patterns from REAL data`);
+        }
+        
+        // STEP 4: Create chart and update UI
+        createRealCandlestickChart('candlestick-chart', realData, patterns);
+        updateRealCandlestickUI(realData, patterns);
+        
+        // STEP 5: Show content
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+        
+        console.log(`✅ Candlestick tab loaded with REAL DATA for ${symbol}!`);
+        
+    } catch (error) {
+        console.error('❌ Error loading candlestick data:', error);
+        
+        const loadingEl = document.getElementById('candlestick-loading');
+        const errorEl = document.getElementById('candlestick-error');
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.innerHTML = `
+                <div style="color: #e74c3c; text-align: center; padding: 20px;">
+                    <h4>Real Data Loading Failed for ${symbol}</h4>
+                    <p>${error.message}</p>
+                    <div style="margin-top: 15px;">
+                        <button onclick="loadCandlestickDataForced('${symbol}')" 
+                                style="background: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                            🔄 Retry Loading
+                        </button>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #7f8c8d;">
+                        Or visit the <strong>15-Minute Interval</strong> tab first to load real market data.
+                    </p>
+                </div>
+            `;
+        }
+    }
+}
+
+// SAFER switchTab function with proper symbol handling
+window.switchTab = function(tabName) {
+    // Ensure symbol is set
+    const symbol = ensureCurrentSymbol();
+    
+    console.log(`🔄 Switching to tab: ${tabName} for symbol: ${symbol}`);
+    
+    // Update tab UI
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+    
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`${tabName}-tab`)?.classList.add('active');
+    
+    // Handle candlestick tab with proper symbol
+    if (tabName === 'candlestick') {
+        console.log(`🕯️ Loading candlestick tab for symbol: ${symbol}`);
+        setTimeout(() => {
+            loadCandlestickDataForced(symbol);
+        }, 100);
+        return;
+    }
+    
+    // Handle other tabs with proper symbol
+    if (tabName === 'intraday' && document.getElementById('intraday-content').style.display === 'none') {
+        console.log(`⚡ Loading 30-minute data for symbol: ${symbol}`);
+        if (window.loadIntradayData) window.loadIntradayData(symbol);
+    }
+    
+    if (tabName === 'intraday15' && document.getElementById('intraday15-content').style.display === 'none') {
+        console.log(`🚀 Loading 15-minute data for symbol: ${symbol}`);
+        if (window.loadIntraday15Data) window.loadIntraday15Data(symbol);
+    }
+    
+    if (tabName === 'chatgpt') {
+        if (window.initializeChatGPTTab) window.initializeChatGPTTab();
+    }
+};
+
+// ALSO UPDATE the page initialization to ensure symbol is set
+window.addEventListener('load', function() {
+    // Ensure symbol is properly initialized
+    const symbol = ensureCurrentSymbol();
+    
+    // Update page title with symbol
+    document.getElementById('stockTitle').textContent = `Detailed Analysis for ${symbol}`;
+    document.title = `Trading Robot - ${symbol} Analysis`;
+    
+    console.log(`📊 Page initialized with symbol: ${symbol}`);
+    
+    // Rest of your existing initialization code...
+    // Set up tab event listeners, etc.
+    
+    // Load daily data with proper symbol
+    loadDailyData(symbol);
+});
+
+// DEBUG: Add symbol checking function
+function checkCurrentSymbol() {
+    console.log('🔍 Current symbol status:');
+    console.log('- window.currentSymbol:', window.currentSymbol);
+    console.log('- URL symbol:', new URLSearchParams(window.location.search).get('symbol'));
+    console.log('- Existing intraday15Data symbol:', window.intraday15Data?.symbol);
+    console.log('- Existing intraday15Data source:', window.intraday15Data?.source);
+}
+
+// Call this in console to debug: checkCurrentSymbol()
+window.checkCurrentSymbol = checkCurrentSymbol;
+
+console.log('🔧 Symbol detection and candlestick integration fixed');
+
+
 // Update the switchTab function to include candlestick tab
 function switchTab(tabName) {
     // Update tab buttons

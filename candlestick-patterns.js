@@ -1,617 +1,444 @@
-// candlestick-patterns.js - Candlestick pattern detection for all 12 patterns
+// COMPLETE REPLACEMENT for candlestick loading - Add this to your detailed-view.js
 
-const CandlestickPatterns = {
-    // Pattern emoji mappings
-    patternEmojis: {
-        'hammer': '🔨',
-        'dragonfly': '🐉',
-        'gravestone': '🪦',
-        'inverted-hammer': '🔨',
-        'tweezer-bottom': '🤏',
-        'tweezer-top': '🤏',
-        'morning-star': '🌟',
-        'evening-star': '🌙',
-        'bullish-engulfing': '🐂',
-        'bearish-engulfing': '🐻',
-        'three-white-soldiers': '⚪',
-        'three-black-crows': '⚫'
-    },
-
-    // Main pattern detection function
-    detectPatterns: function(ohlcData) {
-        if (!ohlcData || ohlcData.length < 3) {
-            return [];
-        }
-
-        const patterns = [];
+// Force load real data from 15-minute tab
+async function loadCandlestickDataForced(symbol) {
+    console.log(`🕯️ FORCED loading candlestick data for ${symbol}...`);
+    
+    try {
+        const loadingEl = document.getElementById('candlestick-loading');
+        const contentEl = document.getElementById('candlestick-content');
+        const errorEl = document.getElementById('candlestick-error');
         
-        for (let i = 2; i < ohlcData.length; i++) {
-            const current = ohlcData[i];
-            const prev = ohlcData[i-1];
-            const prev2 = ohlcData[i-2];
+        loadingEl.style.display = 'flex';
+        contentEl.style.display = 'none';
+        errorEl.style.display = 'none';
+        
+        // STEP 1: Force load 15-minute tab data if not available
+        console.log('🔍 Checking for existing 15-minute data...');
+        console.log('Current intraday15Data:', window.intraday15Data);
+        
+        let realData = null;
+        
+        // Check if 15-minute data exists and has real source
+        if (window.intraday15Data && 
+            window.intraday15Data.historicalData && 
+            window.intraday15Data.source && 
+            window.intraday15Data.source.includes('TwelveData')) {
             
-            // Validate candle data
-            if (!this.isValidCandle(current) || !this.isValidCandle(prev)) {
-                continue;
+            console.log('✅ Found existing REAL TwelveData from 15-minute tab');
+            realData = window.intraday15Data;
+            
+        } else {
+            console.log('❌ No real 15-minute data found, forcing load...');
+            
+            // Show loading message
+            loadingEl.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="spinner"></div>
+                    <div style="margin-top: 10px; color: #2c3e50;">Loading real market data...</div>
+                </div>
+            `;
+            
+            // Force load TwelveData for 15-minute interval
+            try {
+                console.log('📡 Force fetching TwelveData 15-minute...');
+                realData = await fetchTwelveDataIntraday15(symbol);
+                
+                // Store it globally
+                window.intraday15Data = realData;
+                
+                console.log('✅ Successfully force-loaded TwelveData');
+                console.log('Data source:', realData.source);
+                console.log('Data points:', realData.historicalData.length);
+                
+            } catch (apiError) {
+                console.error('❌ Failed to force load TwelveData:', apiError);
+                throw new Error('Cannot load real market data for pattern analysis');
             }
+        }
+        
+        // STEP 2: Validate we have real data
+        if (!realData || !realData.historicalData || realData.historicalData.length < 10) {
+            throw new Error('Insufficient real market data for pattern analysis');
+        }
+        
+        console.log(`📊 Using REAL data: ${realData.source}`);
+        console.log(`📈 ${realData.historicalData.length} real data points`);
+        console.log(`💰 Real current price: $${realData.price.toFixed(2)}`);
+        
+        // STEP 3: Convert real data to proper OHLC format
+        const ohlcData = realData.historicalData.map((item, index) => {
+            return {
+                open: parseFloat(item.open),
+                high: parseFloat(item.high), 
+                low: parseFloat(item.low),
+                close: parseFloat(item.close),
+                datetime: item.datetime,
+                volume: parseInt(item.volume || 0)
+            };
+        });
+        
+        console.log('🔄 Real OHLC data prepared:', ohlcData.length, 'candles');
+        console.log('Sample candle:', ohlcData[ohlcData.length - 1]);
+        
+        // STEP 4: Detect patterns on real data
+        let patterns = [];
+        if (window.CandlestickPatterns) {
+            patterns = window.CandlestickPatterns.detectPatterns(ohlcData);
+            console.log(`🎯 Detected ${patterns.length} patterns from REAL market data`);
+        } else {
+            console.warn('⚠️ Pattern detection not available');
+            patterns = [];
+        }
+        
+        // STEP 5: Create chart with real data
+        createRealCandlestickChart('candlestick-chart', realData, patterns);
+        
+        // STEP 6: Update UI to show REAL data source
+        updateRealCandlestickUI(realData, patterns);
+        
+        // STEP 7: Show completed content
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+        
+        console.log('✅ Candlestick tab loaded with VERIFIED REAL DATA!');
+        
+    } catch (error) {
+        console.error('❌ Error loading real candlestick data:', error);
+        
+        const loadingEl = document.getElementById('candlestick-loading');
+        const errorEl = document.getElementById('candlestick-error');
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (errorEl) {
+            errorEl.style.display = 'block';
+            errorEl.innerHTML = `
+                <div style="color: #e74c3c; text-align: center; padding: 20px;">
+                    <h4>Real Data Loading Failed</h4>
+                    <p>${error.message}</p>
+                    <p style="margin-top: 10px; font-size: 0.9em;">
+                        Please visit the <strong>15-Minute Interval</strong> tab first to load real market data.
+                    </p>
+                </div>
+            `;
+        }
+    }
+}
 
-            // Single candle patterns
-            patterns.push(...this.detectSingleCandlePatterns(current, i));
+// Create chart specifically for real data
+function createRealCandlestickChart(canvasId, realData, patterns) {
+    try {
+        console.log('📊 Creating chart with REAL TwelveData...');
+        
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) throw new Error('Canvas not found');
+        
+        // Destroy existing chart
+        if (window.candlestickChart) {
+            window.candlestickChart.destroy();
+        }
+        
+        // Process real data
+        const labels = realData.historicalData.map(item => {
+            const date = new Date(item.datetime);
+            return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        });
+        
+        const prices = realData.historicalData.map(item => parseFloat(item.close));
+        
+        // Create chart
+        window.candlestickChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Real Close Price (TwelveData)',
+                    data: prices,
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 4,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${realData.symbol} - REAL 15-Minute Patterns (TwelveData)`,
+                        font: { size: 16, weight: 'bold' },
+                        color: '#2c3e50'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                const index = context[0].dataIndex;
+                                const pattern = patterns.find(p => p.index === index);
+                                if (pattern) {
+                                    return [``, `🎯 ${pattern.name}`, `${Math.round(pattern.confidence * 100)}% confidence`];
+                                }
+                                return [];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: { display: true, text: 'Real Price ($)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Time (15-min intervals - TwelveData)' }
+                    }
+                }
+            }
+        });
+        
+        // Add pattern highlighting
+        if (patterns.length > 0) {
+            addRealPatternHighlights(window.candlestickChart, patterns);
+        }
+        
+        console.log('✅ Real data chart created successfully');
+        
+    } catch (error) {
+        console.error('❌ Real chart creation failed:', error);
+    }
+}
+
+// Update UI specifically for real data
+function updateRealCandlestickUI(realData, patterns) {
+    try {
+        console.log('🎨 Updating UI with REAL data...');
+        
+        // Update header with real data
+        const symbolEl = document.getElementById('candlestick-symbol');
+        const priceEl = document.getElementById('candlestick-price');
+        const changeEl = document.getElementById('candlestick-change');
+        const sourceEl = document.getElementById('candlestick-source-info');
+        
+        if (symbolEl) symbolEl.textContent = realData.symbol;
+        if (priceEl) priceEl.textContent = `$${realData.price.toFixed(2)}`;
+        
+        if (changeEl) {
+            const changeFormatted = realData.change ? realData.change.toFixed(2) : '0.00';
+            const changePercentFormatted = realData.changePercent ? realData.changePercent.toFixed(2) : '0.00';
+            const changeColor = (realData.change >= 0) ? '#27ae60' : '#e74c3c';
+            const changeSymbol = (realData.change >= 0) ? '+' : '';
             
-            // Two candle patterns
-            if (this.isValidCandle(prev)) {
-                patterns.push(...this.detectTwoCandlePatterns(prev, current, i));
+            changeEl.innerHTML = `
+                <div style="font-size: 0.9em; color: ${changeColor}; margin-top: 5px;">
+                    ${changeSymbol}${changeFormatted} (${changeSymbol}${changePercentFormatted}%)
+                </div>
+            `;
+        }
+        
+        // FORCE show real data source
+        if (sourceEl) {
+            sourceEl.innerHTML = `
+                <div style="font-size: 0.8em; color: #7f8c8d;">
+                    <strong style="color: #27ae60;">TwelveData 15-minute intervals</strong> • Real Market Data • Pattern Analysis
+                    <span style="background: #27ae60; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.7em; margin-left: 8px; font-weight: bold;">🥇 REAL DATA</span>
+                </div>
+            `;
+        }
+        
+        // Update patterns with real data context
+        updateRealPatternsList(patterns, realData);
+        
+        console.log('✅ UI updated with REAL data indicators');
+        
+    } catch (error) {
+        console.error('❌ Real UI update failed:', error);
+    }
+}
+
+// Update patterns list with real data context
+function updateRealPatternsList(patterns, realData) {
+    try {
+        const patternsList = document.getElementById('detected-patterns-list');
+        if (!patternsList) return;
+        
+        if (patterns.length === 0) {
+            patternsList.innerHTML = `
+                <div class="no-patterns">
+                    <div style="margin-bottom: 10px;">📊 No patterns detected in current real market data</div>
+                    <div style="font-size: 0.85em; color: #7f8c8d;">
+                        Analyzed ${realData.historicalData.length} real 15-minute intervals from TwelveData
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        patternsList.innerHTML = patterns.map(pattern => `
+            <div class="pattern-detected ${pattern.bullish ? 'bullish' : 'bearish'}">
+                <div class="pattern-header">
+                    <div class="pattern-name">
+                        ${pattern.emoji} ${pattern.name}
+                        <span style="background: #27ae60; color: white; padding: 1px 4px; border-radius: 6px; font-size: 0.7em; margin-left: 5px;">REAL</span>
+                    </div>
+                    <div class="pattern-confidence">
+                        ${Math.round(pattern.confidence * 100)}%
+                    </div>
+                </div>
+                <div class="pattern-description">
+                    ${pattern.description}
+                </div>
+                <div class="pattern-location">
+                    📍 Real Market Data • Interval ${pattern.index} • Price: $${pattern.price.toFixed(2)}
+                </div>
+            </div>
+        `).join('');
+        
+        // Update summary with real data context
+        updateRealPatternSummary(patterns, realData);
+        
+    } catch (error) {
+        console.error('❌ Real patterns list update failed:', error);
+    }
+}
+
+// Update summary with real data context  
+function updateRealPatternSummary(patterns, realData) {
+    try {
+        const summaryDiv = document.getElementById('pattern-summary');
+        if (!summaryDiv) return;
+        
+        summaryDiv.style.display = 'block';
+        
+        const bullishPatterns = patterns.filter(p => p.bullish);
+        const bearishPatterns = patterns.filter(p => !p.bullish);
+        const avgConfidence = patterns.length > 0 ? patterns.reduce((sum, p) => sum + p.confidence, 0) / patterns.length : 0;
+        
+        const bullishEl = document.getElementById('bullish-count');
+        const bearishEl = document.getElementById('bearish-count');
+        const confidenceEl = document.getElementById('avg-confidence');
+        const signalEl = document.getElementById('overall-signal');
+        
+        if (bullishEl) bullishEl.textContent = bullishPatterns.length;
+        if (bearishEl) bearishEl.textContent = bearishPatterns.length;
+        if (confidenceEl) confidenceEl.textContent = Math.round(avgConfidence * 100) + '%';
+        
+        if (signalEl) {
+            let signal;
+            if (patterns.length === 0) {
+                signal = `NO PATTERNS - Analyzed ${realData.historicalData.length} real intervals`;
+                signalEl.className = 'overall-signal';
+            } else if (bullishPatterns.length > bearishPatterns.length) {
+                signal = 'BULLISH - Real market patterns suggest upward movement';
+                signalEl.className = 'overall-signal bullish';
+            } else if (bearishPatterns.length > bullishPatterns.length) {
+                signal = 'BEARISH - Real market patterns suggest downward movement';
+                signalEl.className = 'overall-signal bearish';
+            } else {
+                signal = 'NEUTRAL - Mixed real market pattern signals';
+                signalEl.className = 'overall-signal';
             }
             
-            // Three candle patterns
-            if (this.isValidCandle(prev2)) {
-                patterns.push(...this.detectThreeCandlePatterns(prev2, prev, current, i));
+            signalEl.textContent = signal;
+        }
+        
+    } catch (error) {
+        console.error('❌ Real pattern summary update failed:', error);
+    }
+}
+
+// Add pattern highlighting for real data
+function addRealPatternHighlights(chart, patterns) {
+    const originalDraw = chart.draw;
+    
+    chart.draw = function() {
+        originalDraw.call(this);
+        
+        const ctx = this.ctx;
+        const xScale = this.scales.x;
+        const yScale = this.scales.y;
+        
+        if (!ctx || !xScale || !yScale) return;
+        
+        ctx.save();
+        
+        patterns.forEach(pattern => {
+            try {
+                const x = xScale.getPixelForValue(pattern.index);
+                const y = yScale.getPixelForValue(pattern.price);
+                
+                if (isNaN(x) || isNaN(y)) return;
+                
+                // Larger, more visible markers for real data
+                ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.95)' : 'rgba(231, 76, 60, 0.95)';
+                ctx.strokeStyle = pattern.bullish ? '#27ae60' : '#e74c3c';
+                ctx.lineWidth = 4;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 18, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+                
+                // Pattern emoji
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 18px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(pattern.emoji, x, y);
+                
+                // "REAL" indicator
+                ctx.fillStyle = 'rgba(52, 152, 219, 0.9)';
+                ctx.font = 'bold 8px Arial';
+                ctx.fillText('REAL', x, y + 25);
+                
+            } catch (e) {
+                console.warn('Pattern highlight error:', e);
             }
-        }
+        });
         
-        // Filter by confidence and remove duplicates
-        return patterns
-            .filter(p => p.confidence >= 0.75)
-            .sort((a, b) => b.confidence - a.confidence);
-    },
+        ctx.restore();
+    };
+    
+    chart.update('none');
+}
 
-    // Validate candle data
-    isValidCandle: function(candle) {
-        return candle && 
-               typeof candle.open === 'number' && 
-               typeof candle.high === 'number' && 
-               typeof candle.low === 'number' && 
-               typeof candle.close === 'number' &&
-               candle.high >= Math.max(candle.open, candle.close) &&
-               candle.low <= Math.min(candle.open, candle.close) &&
-               candle.high > candle.low;
-    },
-
-    // Calculate candle properties
-    getCandleProperties: function(candle) {
-        const body = Math.abs(candle.close - candle.open);
-        const upperShadow = candle.high - Math.max(candle.open, candle.close);
-        const lowerShadow = Math.min(candle.open, candle.close) - candle.low;
-        const totalRange = candle.high - candle.low;
-        const isGreen = candle.close > candle.open;
-        const isRed = candle.close < candle.open;
-        const isDoji = Math.abs(candle.close - candle.open) < (totalRange * 0.1);
-        
-        return {
-            body,
-            upperShadow,
-            lowerShadow,
-            totalRange,
-            isGreen,
-            isRed,
-            isDoji,
-            bodyPercent: totalRange > 0 ? (body / totalRange) : 0,
-            upperPercent: totalRange > 0 ? (upperShadow / totalRange) : 0,
-            lowerPercent: totalRange > 0 ? (lowerShadow / totalRange) : 0
-        };
-    },
-
-    // Single candle pattern detection
-    detectSingleCandlePatterns: function(candle, index) {
-        const patterns = [];
-        const props = this.getCandleProperties(candle);
-        
-        // Hammer Pattern
-        const hammer = this.detectHammer(candle, props);
-        if (hammer.detected) {
-            patterns.push({
-                name: 'Hammer',
-                type: 'hammer',
-                emoji: this.patternEmojis.hammer,
-                bullish: true,
-                index: index,
-                price: candle.close,
-                confidence: hammer.confidence,
-                description: 'Bullish reversal pattern with long lower shadow'
-            });
-        }
-        
-        // Dragonfly Doji
-        const dragonfly = this.detectDragonflyDoji(candle, props);
-        if (dragonfly.detected) {
-            patterns.push({
-                name: 'Dragonfly Doji',
-                type: 'dragonfly',
-                emoji: this.patternEmojis.dragonfly,
-                bullish: true,
-                index: index,
-                price: candle.close,
-                confidence: dragonfly.confidence,
-                description: 'Bullish reversal doji with long lower shadow'
-            });
-        }
-        
-        // Gravestone Doji
-        const gravestone = this.detectGravestoneDoji(candle, props);
-        if (gravestone.detected) {
-            patterns.push({
-                name: 'Gravestone Doji',
-                type: 'gravestone',
-                emoji: this.patternEmojis.gravestone,
-                bullish: false,
-                index: index,
-                price: candle.close,
-                confidence: gravestone.confidence,
-                description: 'Bearish reversal doji with long upper shadow'
-            });
-        }
-        
-        // Inverted Hammer
-        const invertedHammer = this.detectInvertedHammer(candle, props);
-        if (invertedHammer.detected) {
-            patterns.push({
-                name: 'Inverted Hammer',
-                type: 'inverted-hammer',
-                emoji: this.patternEmojis['inverted-hammer'],
-                bullish: false,
-                index: index,
-                price: candle.close,
-                confidence: invertedHammer.confidence,
-                description: 'Bearish reversal pattern with long upper shadow'
-            });
-        }
-        
-        return patterns;
-    },
-
-    // Two candle pattern detection
-    detectTwoCandlePatterns: function(prev, current, index) {
-        const patterns = [];
-        
-        // Bullish Engulfing
-        const bullishEngulfing = this.detectBullishEngulfing(prev, current);
-        if (bullishEngulfing.detected) {
-            patterns.push({
-                name: 'Bullish Engulfing',
-                type: 'bullish-engulfing',
-                emoji: this.patternEmojis['bullish-engulfing'],
-                bullish: true,
-                index: index,
-                price: current.close,
-                confidence: bullishEngulfing.confidence,
-                description: 'Bullish reversal - large green candle engulfs previous red candle'
-            });
-        }
-        
-        // Bearish Engulfing
-        const bearishEngulfing = this.detectBearishEngulfing(prev, current);
-        if (bearishEngulfing.detected) {
-            patterns.push({
-                name: 'Bearish Engulfing',
-                type: 'bearish-engulfing',
-                emoji: this.patternEmojis['bearish-engulfing'],
-                bullish: false,
-                index: index,
-                price: current.close,
-                confidence: bearishEngulfing.confidence,
-                description: 'Bearish reversal - large red candle engulfs previous green candle'
-            });
-        }
-        
-        // Tweezer Top
-        const tweezerTop = this.detectTweezerTop(prev, current);
-        if (tweezerTop.detected) {
-            patterns.push({
-                name: 'Tweezer Top',
-                type: 'tweezer-top',
-                emoji: this.patternEmojis['tweezer-top'],
-                bullish: false,
-                index: index,
-                price: current.close,
-                confidence: tweezerTop.confidence,
-                description: 'Bearish reversal - two candles with similar highs'
-            });
-        }
-        
-        // Tweezer Bottom
-        const tweezerBottom = this.detectTweezerBottom(prev, current);
-        if (tweezerBottom.detected) {
-            patterns.push({
-                name: 'Tweezer Bottom',
-                type: 'tweezer-bottom',
-                emoji: this.patternEmojis['tweezer-bottom'],
-                bullish: true,
-                index: index,
-                price: current.close,
-                confidence: tweezerBottom.confidence,
-                description: 'Bullish reversal - two candles with similar lows'
-            });
-        }
-        
-        return patterns;
-    },
-
-    // Three candle pattern detection
-    detectThreeCandlePatterns: function(first, second, third, index) {
-        const patterns = [];
-        
-        // Morning Star
-        const morningStar = this.detectMorningStar(first, second, third);
-        if (morningStar.detected) {
-            patterns.push({
-                name: 'Morning Star',
-                type: 'morning-star',
-                emoji: this.patternEmojis['morning-star'],
-                bullish: true,
-                index: index,
-                price: third.close,
-                confidence: morningStar.confidence,
-                description: 'Bullish reversal - three candle pattern signaling upward reversal'
-            });
-        }
-        
-        // Evening Star
-        const eveningStar = this.detectEveningStar(first, second, third);
-        if (eveningStar.detected) {
-            patterns.push({
-                name: 'Evening Star',
-                type: 'evening-star',
-                emoji: this.patternEmojis['evening-star'],
-                bullish: false,
-                index: index,
-                price: third.close,
-                confidence: eveningStar.confidence,
-                description: 'Bearish reversal - three candle pattern signaling downward reversal'
-            });
-        }
-        
-        // Three White Soldiers
-        const threeWhiteSoldiers = this.detectThreeWhiteSoldiers(first, second, third);
-        if (threeWhiteSoldiers.detected) {
-            patterns.push({
-                name: 'Three White Soldiers',
-                type: 'three-white-soldiers',
-                emoji: this.patternEmojis['three-white-soldiers'],
-                bullish: true,
-                index: index,
-                price: third.close,
-                confidence: threeWhiteSoldiers.confidence,
-                description: 'Bullish continuation - three consecutive green candles with higher closes'
-            });
-        }
-        
-        // Three Black Crows
-        const threeBlackCrows = this.detectThreeBlackCrows(first, second, third);
-        if (threeBlackCrows.detected) {
-            patterns.push({
-                name: 'Three Black Crows',
-                type: 'three-black-crows',
-                emoji: this.patternEmojis['three-black-crows'],
-                bullish: false,
-                index: index,
-                price: third.close,
-                confidence: threeBlackCrows.confidence,
-                description: 'Bearish continuation - three consecutive red candles with lower closes'
-            });
-        }
-        
-        return patterns;
-    },
-
-    // Individual pattern detection methods
-
-    // Hammer: Small body, long lower shadow, short upper shadow
-    detectHammer: function(candle, props) {
-        const conditions = [
-            props.bodyPercent < 0.3,                    // Small body
-            props.lowerPercent > 0.5,                   // Long lower shadow
-            props.upperPercent < 0.2,                   // Short upper shadow
-            props.lowerShadow > (props.body * 2)        // Lower shadow > 2x body
-        ];
-        
-        const metConditions = conditions.filter(Boolean).length;
-        
-        if (metConditions >= 3) {
-            let confidence = 0.75 + (metConditions - 3) * 0.05;
-            
-            // Boost confidence for stronger patterns
-            if (props.lowerPercent > 0.6) confidence += 0.1;
-            if (props.upperPercent < 0.1) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Dragonfly Doji: Doji with long lower shadow
-    detectDragonflyDoji: function(candle, props) {
-        const conditions = [
-            props.isDoji,                               // Is doji
-            props.lowerPercent > 0.5,                   // Long lower shadow
-            props.upperPercent < 0.15                   // Very short upper shadow
-        ];
-        
-        if (conditions.every(Boolean)) {
-            let confidence = 0.8;
-            if (props.lowerPercent > 0.7) confidence += 0.1;
-            if (props.upperPercent < 0.05) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Gravestone Doji: Doji with long upper shadow
-    detectGravestoneDoji: function(candle, props) {
-        const conditions = [
-            props.isDoji,                               // Is doji
-            props.upperPercent > 0.5,                   // Long upper shadow
-            props.lowerPercent < 0.15                   // Very short lower shadow
-        ];
-        
-        if (conditions.every(Boolean)) {
-            let confidence = 0.8;
-            if (props.upperPercent > 0.7) confidence += 0.1;
-            if (props.lowerPercent < 0.05) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Inverted Hammer: Small body, long upper shadow, short lower shadow
-    detectInvertedHammer: function(candle, props) {
-        const conditions = [
-            props.bodyPercent < 0.3,                    // Small body
-            props.upperPercent > 0.5,                   // Long upper shadow
-            props.lowerPercent < 0.2,                   // Short lower shadow
-            props.upperShadow > (props.body * 2)        // Upper shadow > 2x body
-        ];
-        
-        const metConditions = conditions.filter(Boolean).length;
-        
-        if (metConditions >= 3) {
-            let confidence = 0.75 + (metConditions - 3) * 0.05;
-            
-            if (props.upperPercent > 0.6) confidence += 0.1;
-            if (props.lowerPercent < 0.1) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Bullish Engulfing: Green candle completely engulfs previous red candle
-    detectBullishEngulfing: function(prev, current) {
-        const prevProps = this.getCandleProperties(prev);
-        const currProps = this.getCandleProperties(current);
-        
-        const conditions = [
-            prevProps.isRed,                            // Previous candle is red
-            currProps.isGreen,                          // Current candle is green
-            current.open < prev.close,                  // Opens below previous close
-            current.close > prev.open,                  // Closes above previous open
-            currProps.body > prevProps.body * 1.1      // Larger body than previous
-        ];
-        
-        if (conditions.every(Boolean)) {
-            let confidence = 0.8;
-            
-            // Boost for stronger engulfing
-            const engulfingRatio = currProps.body / prevProps.body;
-            if (engulfingRatio > 1.5) confidence += 0.1;
-            if (engulfingRatio > 2.0) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Bearish Engulfing: Red candle completely engulfs previous green candle
-    detectBearishEngulfing: function(prev, current) {
-        const prevProps = this.getCandleProperties(prev);
-        const currProps = this.getCandleProperties(current);
-        
-        const conditions = [
-            prevProps.isGreen,                          // Previous candle is green
-            currProps.isRed,                            // Current candle is red
-            current.open > prev.close,                  // Opens above previous close
-            current.close < prev.open,                  // Closes below previous open
-            currProps.body > prevProps.body * 1.1      // Larger body than previous
-        ];
-        
-        if (conditions.every(Boolean)) {
-            let confidence = 0.8;
-            
-            const engulfingRatio = currProps.body / prevProps.body;
-            if (engulfingRatio > 1.5) confidence += 0.1;
-            if (engulfingRatio > 2.0) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Tweezer Top: Two candles with similar highs
-    detectTweezerTop: function(prev, current) {
-        const prevProps = this.getCandleProperties(prev);
-        const currProps = this.getCandleProperties(current);
-        
-        const highDiff = Math.abs(prev.high - current.high);
-        const avgHigh = (prev.high + current.high) / 2;
-        const tolerance = avgHigh * 0.002; // 0.2% tolerance
-        
-        const conditions = [
-            highDiff <= tolerance,                      // Similar highs
-            prevProps.isGreen && currProps.isRed,      // First green, second red
-            prev.close > prev.open,                    // Confirm first is bullish
-            current.close < current.open               // Confirm second is bearish
-        ];
-        
-        if (conditions.every(Boolean)) {
-            let confidence = 0.75;
-            
-            if (highDiff <= tolerance * 0.5) confidence += 0.1; // Very similar highs
-            if (currProps.body > prevProps.body) confidence += 0.05; // Strong reversal
-            
-            return { detected: true, confidence: Math.min(confidence, 0.9) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Tweezer Bottom: Two candles with similar lows
-    detectTweezerBottom: function(prev, current) {
-        const prevProps = this.getCandleProperties(prev);
-        const currProps = this.getCandleProperties(current);
-        
-        const lowDiff = Math.abs(prev.low - current.low);
-        const avgLow = (prev.low + current.low) / 2;
-        const tolerance = avgLow * 0.002; // 0.2% tolerance
-        
-        const conditions = [
-            lowDiff <= tolerance,                       // Similar lows
-            prevProps.isRed && currProps.isGreen,      // First red, second green
-            prev.close < prev.open,                    // Confirm first is bearish
-            current.close > current.open               // Confirm second is bullish
-        ];
-        
-        if (conditions.every(Boolean)) {
-            let confidence = 0.75;
-            
-            if (lowDiff <= tolerance * 0.5) confidence += 0.1;
-            if (currProps.body > prevProps.body) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.9) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Morning Star: Bearish candle, small body/doji, bullish candle
-    detectMorningStar: function(first, second, third) {
-        const firstProps = this.getCandleProperties(first);
-        const secondProps = this.getCandleProperties(second);
-        const thirdProps = this.getCandleProperties(third);
-        
-        const conditions = [
-            firstProps.isRed,                          // First candle is bearish
-            secondProps.bodyPercent < 0.3,             // Second candle has small body
-            thirdProps.isGreen,                        // Third candle is bullish
-            second.high < first.close,                 // Gap down after first
-            third.open > second.high,                  // Gap up before third
-            third.close > (first.open + first.close) / 2  // Third closes above first's midpoint
-        ];
-        
-        const metConditions = conditions.filter(Boolean).length;
-        
-        if (metConditions >= 4) {
-            let confidence = 0.7 + (metConditions - 4) * 0.05;
-            
-            // Boost for stronger pattern
-            if (secondProps.isDoji) confidence += 0.1;
-            if (thirdProps.body > firstProps.body) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Evening Star: Bullish candle, small body/doji, bearish candle
-    detectEveningStar: function(first, second, third) {
-        const firstProps = this.getCandleProperties(first);
-        const secondProps = this.getCandleProperties(second);
-        const thirdProps = this.getCandleProperties(third);
-        
-        const conditions = [
-            firstProps.isGreen,                        // First candle is bullish
-            secondProps.bodyPercent < 0.3,             // Second candle has small body
-            thirdProps.isRed,                          // Third candle is bearish
-            second.low > first.close,                  // Gap up after first
-            third.open < second.low,                   // Gap down before third
-            third.close < (first.open + first.close) / 2  // Third closes below first's midpoint
-        ];
-        
-        const metConditions = conditions.filter(Boolean).length;
-        
-        if (metConditions >= 4) {
-            let confidence = 0.7 + (metConditions - 4) * 0.05;
-            
-            if (secondProps.isDoji) confidence += 0.1;
-            if (thirdProps.body > firstProps.body) confidence += 0.05;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.95) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Three White Soldiers: Three consecutive bullish candles
-    detectThreeWhiteSoldiers: function(first, second, third) {
-        const firstProps = this.getCandleProperties(first);
-        const secondProps = this.getCandleProperties(second);
-        const thirdProps = this.getCandleProperties(third);
-        
-        const conditions = [
-            firstProps.isGreen && secondProps.isGreen && thirdProps.isGreen,  // All green
-            second.close > first.close,                 // Each closes higher
-            third.close > second.close,
-            second.open > first.open,                   // Each opens higher
-            third.open > second.open,
-            firstProps.bodyPercent > 0.6,               // Good-sized bodies
-            secondProps.bodyPercent > 0.6,
-            thirdProps.bodyPercent > 0.6
-        ];
-        
-        const metConditions = conditions.filter(Boolean).length;
-        
-        if (metConditions >= 6) {
-            let confidence = 0.75 + (metConditions - 6) * 0.03;
-            
-            // Boost for consistent progression
-            const progression1 = (second.close - first.close) / first.close;
-            const progression2 = (third.close - second.close) / second.close;
-            
-            if (Math.abs(progression1 - progression2) < 0.01) confidence += 0.1;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.9) };
-        }
-        
-        return { detected: false, confidence: 0 };
-    },
-
-    // Three Black Crows: Three consecutive bearish candles
-    detectThreeBlackCrows: function(first, second, third) {
-        const firstProps = this.getCandleProperties(first);
-        const secondProps = this.getCandleProperties(second);
-        const thirdProps = this.getCandleProperties(third);
-        
-        const conditions = [
-            firstProps.isRed && secondProps.isRed && thirdProps.isRed,  // All red
-            second.close < first.close,                 // Each closes lower
-            third.close < second.close,
-            second.open < first.open,                   // Each opens lower
-            third.open < second.open,
-            firstProps.bodyPercent > 0.6,               // Good-sized bodies
-            secondProps.bodyPercent > 0.6,
-            thirdProps.bodyPercent > 0.6
-        ];
-        
-        const metConditions = conditions.filter(Boolean).length;
-        
-        if (metConditions >= 6) {
-            let confidence = 0.75 + (metConditions - 6) * 0.03;
-            
-            const progression1 = (first.close - second.close) / first.close;
-            const progression2 = (second.close - third.close) / second.close;
-            
-            if (Math.abs(progression1 - progression2) < 0.01) confidence += 0.1;
-            
-            return { detected: true, confidence: Math.min(confidence, 0.9) };
-        }
-        
-        return { detected: false, confidence: 0 };
+// OVERRIDE the switchTab function to use forced real data loading
+window.switchTab = function(tabName) {
+    console.log(`🔄 Switching to tab: ${tabName}`);
+    
+    // Update tab UI
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+    
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById(`${tabName}-tab`)?.classList.add('active');
+    
+    // Handle candlestick tab with FORCED real data
+    if (tabName === 'candlestick') {
+        console.log('🕯️ FORCING real data load for candlestick tab...');
+        setTimeout(() => {
+            loadCandlestickDataForced(window.currentSymbol || 'AAPL');
+        }, 100);
+        return;
+    }
+    
+    // Handle other tabs normally
+    if (tabName === 'intraday' && document.getElementById('intraday-content').style.display === 'none') {
+        if (window.loadIntradayData) window.loadIntradayData(window.currentSymbol);
+    }
+    
+    if (tabName === 'intraday15' && document.getElementById('intraday15-content').style.display === 'none') {
+        if (window.loadIntraday15Data) window.loadIntraday15Data(window.currentSymbol);
+    }
+    
+    if (tabName === 'chatgpt') {
+        if (window.initializeChatGPTTab) window.initializeChatGPTTab();
     }
 };
+
+console.log('🔧 FORCED real data candlestick integration loaded');
