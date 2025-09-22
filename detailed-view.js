@@ -700,6 +700,18 @@ function updateCandlestickUI(data, patterns) {
     highlightDetectedPatternsInGuide(patterns);
 }
 
+// coomon function to show datetime
+function formatDateTime(datetime) {
+    const d = new Date(datetime);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+
 // Update detected patterns list
 function updateDetectedPatternsList(patterns) {
     const patternsList = document.getElementById('detected-patterns-list');
@@ -717,7 +729,12 @@ function updateDetectedPatternsList(patterns) {
         `;
         return;
     }
-    
+    // 🔽 Sort by datetime (latest first)
+    patterns.sort((a, b) => new Date(b.datetime) - new Date(a.datetime));
+
+    // 🔽 Limit to first 10
+    // const limitedPatterns = patterns.slice(0, 10);
+
     patternsList.innerHTML = patterns.map(pattern => {
         const confidenceClass = pattern.confidence > 0.9 ? 'high' : pattern.confidence > 0.8 ? 'medium' : '';
         
@@ -735,7 +752,7 @@ function updateDetectedPatternsList(patterns) {
                     ${pattern.description}
                 </div>
                 <div class="pattern-location">
-                    Location: Candle ${pattern.index} • Price: ${pattern.price.toFixed(2)}
+                    Location: Candle ${pattern.index} @ ${formatDateTime(pattern.datetime)} • Price: ${pattern.price.toFixed(2)}
                 </div>
             </div>
         `;
