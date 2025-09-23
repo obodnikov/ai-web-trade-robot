@@ -46,9 +46,10 @@ trading-robot/
 ├── index.html                    # Main page (clean HTML structure)
 ├── detailed-view.html            # Detailed analysis page (clean HTML)
 ├── styles.css                    # Main page styles
-├── detailed-view-styles.css      # Detailed view styles  
+├── detailed-view-styles.css      # Detailed view styles
 ├── trading-robot.js              # Main page functionality
 ├── detailed-view.js              # Detailed analysis functionality
+├── apiKey.js                     # 🆕 Centralized API key management
 ├── README.md                     # This documentation
 └── deployment/                   # Optional: Nginx configs
     └── nginx_deployment_guide.md
@@ -101,6 +102,7 @@ trading-robot/
    ├── detailed-view-styles.css      # Detailed view styles
    ├── trading-robot.js              # Main page JavaScript
    ├── detailed-view.js              # Detailed view JavaScript
+   ├── apiKey.js                     # 🆕 Centralized API key management
    ├── README.md                     # This file
    └── deployment/                   # Optional: Server configs
        └── nginx_deployment_guide.md
@@ -113,32 +115,50 @@ trading-robot/
 
 ## 🔑 API Setup (Recommended for Best Results)
 
+### 🆕 Centralized API Key Management
+All API keys are now managed in the dedicated `apiKey.js` file for better organization and security:
+
+1. **Open `apiKey.js`** in your preferred text editor
+2. **Replace demo keys** with your actual API keys:
+   ```javascript
+   // Replace these placeholder values with your real API keys
+   window.ALPHA_VANTAGE_API_KEY = 'YOUR_ALPHA_VANTAGE_KEY';
+   window.POLYGON_API_KEY = 'YOUR_POLYGON_API_KEY';
+   window.TWELVEDATA_API_KEY = 'YOUR_TWELVEDATA_KEY';
+   ```
+
 ### 1. Alpha Vantage API Key (PRIMARY - Main Page Daily Data)
 1. Visit [alphavantage.co](https://www.alphavantage.co/support/#api-key)
 2. Sign up for free account (5 calls/minute, 500/day)
 3. Get your API key from dashboard
-4. Replace `'demo'` in `trading-robot.js`:
+4. Replace `'demo'` in `apiKey.js`:
    ```javascript
-   const apiKey = 'YOUR_ALPHA_VANTAGE_KEY'; // Line ~280
+   window.ALPHA_VANTAGE_API_KEY = 'YOUR_ALPHA_VANTAGE_KEY';
    ```
 
 ### 2. TwelveData API Key (DETAILED VIEW - Both Intervals)
 1. Visit [twelvedata.com](https://twelvedata.com/)
 2. Sign up for free account (8 calls/minute, 800/day)
 3. Get your API key from dashboard
-4. Replace `'demo'` in `detailed-view.js`:
+4. Replace `'demo'` in `apiKey.js`:
    ```javascript
-   const apiKey = 'YOUR_TWELVEDATA_KEY'; // Lines ~350 & ~450
+   window.TWELVEDATA_API_KEY = 'YOUR_TWELVEDATA_KEY';
    ```
 
 ### 3. Polygon.io API Key (FALLBACK - Main Page)
 1. Visit [polygon.io](https://polygon.io/)
 2. Sign up for free account (5 calls/minute)
 3. Get your API key from dashboard
-4. Replace `'DEMO'` in `trading-robot.js`:
+4. Replace `'DEMO'` in `apiKey.js`:
    ```javascript
-   const apiKey = 'YOUR_POLYGON_API_KEY'; // Line ~400
+   window.POLYGON_API_KEY = 'YOUR_POLYGON_API_KEY';
    ```
+
+### 🔒 Security Benefits
+- **Single Location**: All API keys in one secure file
+- **Easy Management**: Update all keys from one place
+- **Better Organization**: Clear separation of credentials from business logic
+- **Version Control**: Add `apiKey.js` to `.gitignore` to prevent accidental commits
 
 ## 📱 Usage
 
@@ -217,6 +237,7 @@ npx serve .
 - **`detailed-view-styles.css`**: Detailed analysis styling and charts
 - **`trading-robot.js`**: Main page logic, Alpha Vantage/Polygon.io, card creation
 - **`detailed-view.js`**: Chart creation, TwelveData integration, tab switching
+- **`apiKey.js`**: 🆕 Centralized API key storage and management
 
 ### Cache Issues During Development
 If you modify files and don't see changes:
@@ -235,10 +256,10 @@ Edit the appropriate files:
 ## 🌐 Deployment
 
 ### Simple Hosting
-- Upload all 6 files to any web server
+- Upload all 7 files to any web server
 - Ensure all files are in the same directory
 - Configure HTTPS for API access
-- **Required Files**: `*.html`, `*.css`, `*.js`
+- **Required Files**: `*.html`, `*.css`, `*.js` (including `apiKey.js`)
 
 ### Professional Deployment
 ```bash
@@ -247,6 +268,9 @@ sudo cp *.html *.css *.js /var/www/trading-robot/html/
 
 # Copy Docs directory (required for pattern details)
 sudo cp -r Docs /var/www/trading-robot/html/
+
+# IMPORTANT: Secure your API keys file
+sudo chmod 600 /var/www/trading-robot/html/apiKey.js
 
 # Configure nginx (see configuration below)
 sudo nano /etc/nginx/sites-available/trading-robot
@@ -354,6 +378,8 @@ sudo systemctl reload nginx
 ```dockerfile
 FROM nginx:alpine
 COPY *.html *.css *.js /usr/share/nginx/html/
+# Secure API keys file
+RUN chmod 600 /usr/share/nginx/html/apiKey.js
 EXPOSE 80
 ```
 
@@ -487,6 +513,7 @@ The new "15-mn patterns" tab provides visual candlestick pattern identification 
 - 🧹 **Complete code separation**: HTML, CSS, and JavaScript in separate files
 - 🆕 **TwelveData detailed view**: Daily, 30-minute, and 15-minute intervals
 - 🕯️ **🆕 Candlestick pattern recognition**: Visual pattern identification in 15-minute timeframe
+- 🔑 **🆕 Centralized API key management**: Single `apiKey.js` file for all API credentials
 - 🎨 **Enhanced styling**: Dedicated CSS files for each page
 - 🔧 **Improved maintainability**: Clean, modular code structure
 - ✅ **Better performance**: External file caching and optimization
@@ -535,9 +562,9 @@ The new "15-mn patterns" tab provides visual candlestick pattern identification 
 ### Getting Help
 1. **Check Documentation**: Review this README and deployment guide
 2. **Console Logs**: Open browser developer tools for detailed logging
-3. **API Status**: Verify your API keys are valid and have remaining calls
+3. **API Status**: Verify your API keys in `apiKey.js` are valid and have remaining calls
 4. **Network Issues**: Ensure stable internet connection for API calls
-5. **File Structure**: Ensure all 6 files are in the same directory
+5. **File Structure**: Ensure all 7 files are in the same directory (including `apiKey.js`)
 
 ## 📄 License
 

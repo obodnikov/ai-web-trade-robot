@@ -220,7 +220,7 @@ function generateDemoData(symbol) {
 async function fetchAlphaVantageData(symbol) {
     // Alpha Vantage as PRIMARY data source using TIME_SERIES_DAILY
     // Get your free API key at: https://www.alphavantage.co/support/#api-key
-    const apiKey = 'demo'; // Replace with your Alpha Vantage API key
+    const apiKey = window.ALPHA_VANTAGE_API_KEY || 'demo';
     
     try {
         console.log(`  🥇 PRIMARY: Fetching from Alpha Vantage: ${symbol}`);
@@ -344,7 +344,7 @@ async function fetchAlphaVantageData(symbol) {
 async function fetchPolygonData(symbol) {
     // Polygon.io as FALLBACK data source
     // Get your free API key at: https://polygon.io/
-    const apiKey = 'DEMO'; // Replace with your actual Polygon.io API key
+    const apiKey = window.POLYGON_API_KEY || 'DEMO';
     
     try {
         console.log(`  🥈 FALLBACK: Fetching from Polygon.io: ${symbol}`);
