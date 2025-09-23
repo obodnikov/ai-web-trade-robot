@@ -826,7 +826,7 @@ function highlightDetectedPatternsInGuide(patterns) {
 
 // TwelveData API for 15-minute intervals
 async function fetchTwelveDataIntraday15(symbol) {
-    const apiKey = 'demo'; 
+    const apiKey = window.TWELVEDATA_API_KEY || 'demo'; 
     
     try {
         console.log(`Fetching TwelveData 15min data for ${symbol}...`);
@@ -965,7 +965,7 @@ function generateDemoData(symbol, interval = 'daily') {
 
 // Remaining functions for other tabs (simplified versions)
 async function fetchTwelveDataDaily(symbol) {
-    const apiKey = 'demo';
+    const apiKey = window.TWELVEDATA_API_KEY || 'demo';
     
     try {
         const dailyUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=1day&outputsize=60&apikey=${apiKey}`;
@@ -1025,7 +1025,7 @@ async function fetchTwelveDataDaily(symbol) {
 }
 
 async function fetchTwelveDataIntraday(symbol) {
-    const apiKey = 'demo';
+    const apiKey = window.TWELVEDATA_API_KEY || 'demo';
     
     try {
         const intradayUrl = `https://api.twelvedata.com/time_series?symbol=${symbol}&interval=30min&outputsize=78&apikey=${apiKey}`;
