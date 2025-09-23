@@ -245,9 +245,110 @@ Edit the appropriate files:
 # Copy files to web directory
 sudo cp *.html *.css *.js /var/www/trading-robot/html/
 
-# Configure nginx (see deployment guide)
-sudo cp deployment/nginx.conf /etc/nginx/sites-available/trading-robot
+# Copy Docs directory (required for pattern details)
+sudo cp -r Docs /var/www/trading-robot/html/
+
+# Configure nginx (see configuration below)
+sudo nano /etc/nginx/sites-available/trading-robot
 ```
+
+### Nginx Configuration
+For proper functionality, especially for the pattern detail popups, your nginx configuration should include markdown file serving:
+
+```nginx
+server {
+    listen 80;  # or your preferred port (e.g., 10000)
+
+    server_name your-domain.com;  # Replace with your domain or server IP
+
+    root /var/www/trading-robot/html;
+    index index.html index.htm;
+
+    # Logging
+    access_log /var/www/trading-robot/logs/access.log;
+    error_log /var/www/trading-robot/logs/error.log;
+
+    # Main location
+    location / {
+        try_files $uri $uri/ =404;
+
+        # Add security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "no-referrer-when-downgrade" always;
+        add_header Content-Security-Policy "default-src 'self' http: https: data: blob: 'unsafe-inline'" always;
+    }
+
+    # IMPORTANT: Serve markdown files for pattern details
+    location ~ \.md$ {
+        add_header Content-Type "text/markdown; charset=utf-8" always;
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Pragma "no-cache" always;
+        add_header Expires "0" always;
+
+        # Add CORS headers for fetch requests
+        add_header Access-Control-Allow-Origin "*" always;
+        add_header Access-Control-Allow-Methods "GET, OPTIONS" always;
+        add_header Access-Control-Allow-Headers "Content-Type" always;
+
+        try_files $uri =404;
+    }
+
+    # Static files caching
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_proxied expired no-cache no-store private auth;
+    gzip_types
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        text/markdown
+        application/javascript
+        application/xml+rss
+        application/json;
+
+    # Security: Hide nginx version
+    server_tokens off;
+
+    # Prevent access to hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+}
+```
+
+**Enable the site:**
+```bash
+# Create directories
+sudo mkdir -p /var/www/trading-robot/logs
+
+# Enable site
+sudo ln -s /etc/nginx/sites-available/trading-robot /etc/nginx/sites-enabled/
+
+# Test configuration
+sudo nginx -t
+
+# Reload nginx
+sudo systemctl reload nginx
+```
+
+**Key nginx features for this application:**
+- ✅ **Markdown serving**: Essential for pattern detail popups
+- ✅ **CORS headers**: Allows fetch requests for markdown files
+- ✅ **Security headers**: Protection against common attacks
+- ✅ **Gzip compression**: Better performance for all text files
+- ✅ **Static file caching**: Optimized loading for assets
 
 ### Docker Deployment
 ```dockerfile
