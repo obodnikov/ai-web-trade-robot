@@ -758,9 +758,6 @@ function updateDetectedPatternsList(patterns) {
                 <div class="pattern-location">
                     Location: Candle ${pattern.index} @ ${formatDateTime(pattern.datetime)} • Price: ${pattern.price.toFixed(2)}
                 </div>
-                <div style="text-align: center; margin-top: 10px; font-size: 0.85em; color: #7f8c8d;">
-                    📚 Click for detailed information
-                </div>
             </div>
         `;
     }).join('');
