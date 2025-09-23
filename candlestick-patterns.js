@@ -72,7 +72,7 @@ class CandlestickPatterns {
         if (upperShadow > totalRange * 0.6 && lowerShadow < totalRange * 0.1 && bodySize < totalRange * 0.1) {
             return {
                 name: 'Gravestone Doji',
-                type: 'gravestone',
+                type: 'gravestone-doji',
                 emoji: '🪦',
                 bullish: false,
                 confidence: Math.min(0.95, 0.75 + (upperShadow / totalRange)),
@@ -84,7 +84,7 @@ class CandlestickPatterns {
         if (lowerShadow > totalRange * 0.6 && upperShadow < totalRange * 0.1 && bodySize < totalRange * 0.1) {
             return {
                 name: 'Dragonfly Doji',
-                type: 'dragonfly',
+                type: 'dragonfly-doji',
                 emoji: '🐉',
                 bullish: true,
                 confidence: Math.min(0.95, 0.8 + (lowerShadow / totalRange)),
