@@ -47,7 +47,8 @@ A comprehensive stock market analysis tool that provides real-time trading signa
 - ⚫ **Three Black Crows** - Three consecutive bearish candles
 
 ### 🔧 **Enhanced User Experience**
-- **No Chart Tooltips**: Pattern charts focus purely on visual pattern recognition
+- **🆕 Configurable Tooltips**: Toggle market data and pattern information tooltips independently
+- **Clean Chart Display**: Tooltips disabled by default for focused pattern viewing
 - **Dedicated Pattern Panel**: Right-side panel shows detected patterns with confidence levels
 - **Pattern Summary Statistics**: Bullish vs bearish pattern counts with overall market bias
 - **Interactive Pattern Cards**: Click reference patterns for detailed explanations
@@ -232,10 +233,11 @@ All API keys are now managed in the dedicated `apiKey.js` file for better organi
 ### 🕯️ NEW: Candlestick Pattern Analysis
 1. **Switch to Patterns Tab**: Click "🕯️ 15-Min Patterns" tab in detailed view
 2. **View Chart**: 15-minute candlestick chart with pattern markers (🔨, 🪦, etc.)
-3. **Check Detected Patterns**: Right panel shows all detected patterns with confidence levels
-4. **Pattern Summary**: View bullish vs bearish pattern counts and overall market bias
-5. **Learn Patterns**: Click any reference pattern card for detailed explanations
-6. **No Chart Tooltips**: Clean visual experience focused on pattern recognition
+3. **🆕 Configure Tooltips**: Use checkboxes below chart to toggle market data and pattern tooltips
+4. **Check Detected Patterns**: Right panel shows all detected patterns with confidence levels
+5. **Pattern Summary**: View bullish vs bearish pattern counts and overall market bias
+6. **Learn Patterns**: Click any reference pattern card for detailed explanations
+7. **🆕 Customizable Display**: Choose between clean charts or information-rich tooltips
 
 ### Sample Tickers (Optimized for All APIs)
 - **Mega Cap**: AAPL, MSFT, NVDA, GOOGL, AMZN
@@ -523,10 +525,11 @@ Comprehensive analysis includes:
 The new "15-mn patterns" tab provides comprehensive pattern analysis:
 
 **Visual Chart Features:**
-- **Clean Display**: No tooltips for focused pattern viewing
+- **🆕 Configurable Tooltips**: Two independent checkboxes control market data and pattern information display
 - **Pattern Markers**: Emoji indicators (🔨, 🪦, 🐉, etc.) directly on chart
 - **Confidence Glow**: High-confidence patterns (>85%) have subtle glow effects
 - **Last 20 Candles**: Optimized view showing recent price action
+- **User Control**: Choose between clean visualization or detailed hover information
 
 **Pattern Detection Panel:**
 - **Real-time Detection**: Patterns detected from live 15-minute data
@@ -623,12 +626,13 @@ The new "15-mn patterns" tab provides comprehensive pattern analysis:
 
 ## 📝 Changelog
 
-### v4.1.0 (Current - Advanced Pattern Recognition)
+### v4.1.0 (Current - Advanced Pattern Recognition + Configurable Tooltips)
 - 🕯️ **Advanced candlestick pattern recognition**: 12 patterns with visual detection
 - 🎯 **Pattern confidence scoring**: High/medium/low confidence indicators
+- 🔧 **🆕 Configurable tooltips**: Independent controls for market data and pattern information
 - 🔍 **Interactive pattern details**: Modal popups with comprehensive explanations (if implemented)
 - 📊 **Pattern summary statistics**: Bullish vs bearish counts with market bias
-- 🎨 **Clean chart display**: Disabled tooltips on pattern charts for better visual focus
+- 🎨 **Flexible chart display**: User-controlled tooltip visibility for customized viewing experience
 - 🖼️ **Custom favicon**: Trading chart themed favicon.svg
 - 🐛 **Debug utilities**: Enhanced debugging tools for development
 - 📱 **Mobile optimization**: Improved responsive design for pattern analysis
@@ -764,11 +768,12 @@ Open `index.html` and start trading analysis with the new enhanced pattern detec
 - **Real Market Data**: Patterns detected from live TwelveData 15-minute intervals
 
 ### 📊 **Enhanced User Experience**
-- **Clean Chart Display**: No tooltip interference allows focus on visual pattern recognition
+- **🆕 Configurable Tooltips**: Two independent toggles for market data and pattern information
 - **Pattern Summary**: Quick overview of market sentiment through pattern statistics
 - **Interactive Learning**: Click pattern cards for detailed explanations and examples
 - **Responsive Design**: Optimized pattern display across all device sizes
 - **Performance Optimized**: Efficient pattern detection algorithms
+- **User Control**: Customize information display based on analysis preferences
 
 ### 🔧 **Developer Experience**
 - **Modular Architecture**: Separate pattern detection engine for easy extension
