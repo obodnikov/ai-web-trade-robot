@@ -420,7 +420,7 @@ async function loadCandlestickPatternsEngine() {
     }
 }
 
-// Updated createCandlestickChart function with configurable tooltips
+// Updated createCandlestickChart function with error handling
 function createCandlestickChart(canvasId, data, patterns) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) {
@@ -428,9 +428,19 @@ function createCandlestickChart(canvasId, data, patterns) {
         return;
     }
     
-    // Destroy existing chart
+    // Ensure the canvas is properly set up
+    if (!ctx.getContext) {
+        console.error('Canvas context not available');
+        return;
+    }
+    
+    // Destroy existing chart with error handling
     if (candlestickChart) {
-        candlestickChart.destroy();
+        try {
+            candlestickChart.destroy();
+        } catch (error) {
+            console.warn('Error destroying existing chart:', error);
+        }
     }
     
     // Filter to last N candles for better readability
@@ -476,141 +486,149 @@ function createCandlestickChart(canvasId, data, patterns) {
         adjustedIndex: pattern.index - startIndex
     }));
     
-    candlestickChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Close Price',
-                    data: prices,
-                    borderColor: '#e74c3c',
-                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.1,
-                    pointRadius: 4,
-                    pointHoverRadius: 8,
-                    pointBackgroundColor: '#c0392b',
-                    pointBorderColor: '#e74c3c',
-                    pointBorderWidth: 2
-                },
-                {
-                    label: 'SMA 20',
-                    data: sma20Filtered,
-                    borderColor: '#2ecc71',
-                    borderWidth: 2,
-                    fill: false,
-                    pointRadius: 0,
-                    tension: 0.1
-                },
-                {
-                    label: 'SMA 50',
-                    data: sma50Filtered,
-                    borderColor: '#3498db',
-                    borderWidth: 2,
-                    fill: false,
-                    pointRadius: 0,
-                    tension: 0.1
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: `${data.symbol} - 15-Minute Candlestick Pattern Analysis (Last ${CANDLESTICK_CHART_CANDLES} Candles)`,
-                    font: { size: 16, weight: 'bold' },
-                    color: '#2c3e50'
-                },
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
-                tooltip: {
-                    enabled: true, // Start with tooltips enabled
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                    titleColor: 'white',
-                    bodyColor: 'white',
-                    borderColor: '#3498db',
-                    borderWidth: 2,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    padding: 15,
-                    bodySpacing: 6,
-                    titleSpacing: 6,
-                    caretPadding: 10,
-                    yAlign: 'top',
-                    xAlign: 'center',
-                    position: 'average',
-                    callbacks: {
-                        afterBody: function(context) {
-                            // Check if pattern tooltips are enabled
-                            const showPatternTooltips = document.getElementById('pattern-tooltips-checkbox')?.checked;
-                            if (!showPatternTooltips) {
+    try {
+        candlestickChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Close Price',
+                        data: prices,
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.1,
+                        pointRadius: 4,
+                        pointHoverRadius: 8,
+                        pointBackgroundColor: '#c0392b',
+                        pointBorderColor: '#e74c3c',
+                        pointBorderWidth: 2
+                    },
+                    {
+                        label: 'SMA 20',
+                        data: sma20Filtered,
+                        borderColor: '#2ecc71',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'SMA 50',
+                        data: sma50Filtered,
+                        borderColor: '#3498db',
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: `${data.symbol} - 15-Minute Candlestick Pattern Analysis (Last ${CANDLESTICK_CHART_CANDLES} Candles)`,
+                        font: { size: 16, weight: 'bold' },
+                        color: '#2c3e50'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        enabled: false, // Start with tooltips DISABLED by default
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        borderColor: '#3498db',
+                        borderWidth: 2,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        padding: 15,
+                        bodySpacing: 6,
+                        titleSpacing: 6,
+                        caretPadding: 10,
+                        yAlign: 'top',
+                        xAlign: 'center',
+                        position: 'average',
+                        callbacks: {
+                            afterBody: function(context) {
+                                // Check if pattern tooltips are enabled
+                                const showPatternTooltips = document.getElementById('pattern-tooltips-checkbox')?.checked;
+                                if (!showPatternTooltips) {
+                                    return [];
+                                }
+                                
+                                const index = context[0].dataIndex;
+                                const originalIndex = index + startIndex;
+                                const pattern = patterns.find(p => p.index === originalIndex);
+                                if (pattern) {
+                                    return [
+                                        ``, 
+                                        `🎯 Pattern: ${pattern.emoji} ${pattern.name}`, 
+                                        `Confidence: ${Math.round(pattern.confidence * 100)}%`, 
+                                        `Type: ${pattern.bullish ? 'Bullish ⬆️' : 'Bearish ⬇️'}`,
+                                        `Description: ${pattern.description}`
+                                    ];
+                                }
                                 return [];
                             }
-                            
-                            const index = context[0].dataIndex;
-                            const originalIndex = index + startIndex;
-                            const pattern = patterns.find(p => p.index === originalIndex);
-                            if (pattern) {
-                                return [
-                                    ``, 
-                                    `🎯 Pattern: ${pattern.emoji} ${pattern.name}`, 
-                                    `Confidence: ${Math.round(pattern.confidence * 100)}%`, 
-                                    `Type: ${pattern.bullish ? 'Bullish ⬆️' : 'Bearish ⬇️'}`,
-                                    `Description: ${pattern.description}`
-                                ];
-                            }
-                            return [];
                         }
                     }
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: `Time (15-minute intervals) - Showing last ${CANDLESTICK_CHART_CANDLES} candles`,
-                        font: { size: 12, weight: 'bold' }
-                    },
-                    grid: { color: 'rgba(0, 0, 0, 0.1)' }
                 },
-                y: {
-                    beginAtZero: false,
-                    title: {
-                        display: true,
-                        text: 'Price ($)',
-                        font: { size: 12, weight: 'bold' }
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: `Time (15-minute intervals) - Showing last ${CANDLESTICK_CHART_CANDLES} candles`,
+                            font: { size: 12, weight: 'bold' }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
                     },
-                    grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Price ($)',
+                            font: { size: 12, weight: 'bold' }
+                        },
+                        grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
                 }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
             }
+        });
+        
+        // Add pattern highlighting
+        if (adjustedPatterns.length > 0) {
+            addPatternHighlights(candlestickChart, adjustedPatterns, labels);
         }
-    });
-    
-    // Add pattern highlighting
-    if (adjustedPatterns.length > 0) {
-        addPatternHighlights(candlestickChart, adjustedPatterns, labels);
+        
+        // Initialize tooltip controls AFTER chart is created
+        setTimeout(() => {
+            initializeTooltipControls(candlestickChart, adjustedPatterns, patterns, startIndex);
+        }, 100);
+        
+        console.log(`📈 Candlestick chart created with configurable tooltips (disabled by default)`);
+        return candlestickChart;
+        
+    } catch (error) {
+        console.error('Error creating candlestick chart:', error);
+        return null;
     }
-    
-    // Initialize tooltip controls
-    initializeTooltipControls(candlestickChart, adjustedPatterns, patterns, startIndex);
-    
-    console.log(`📈 Candlestick chart created with configurable tooltips`);
-    return candlestickChart;
 }
 
-// Initialize tooltip control checkboxes
+// Initialize tooltip control checkboxes - FIXED VERSION
 function initializeTooltipControls(chart, adjustedPatterns, allPatterns, startIndex) {
     const marketTooltipCheckbox = document.getElementById('market-tooltips-checkbox');
     const patternTooltipCheckbox = document.getElementById('pattern-tooltips-checkbox');
@@ -620,14 +638,23 @@ function initializeTooltipControls(chart, adjustedPatterns, allPatterns, startIn
         return;
     }
     
-    // Set default states (both checked)
-    marketTooltipCheckbox.checked = true;
-    patternTooltipCheckbox.checked = true;
+    // Set default states (both UNCHECKED by default)
+    marketTooltipCheckbox.checked = false;
+    patternTooltipCheckbox.checked = false;
+    
+    // Start with tooltips disabled by default
+    chart.options.plugins.tooltip.enabled = false;
     
     // Market tooltips control
     marketTooltipCheckbox.addEventListener('change', function() {
         chart.options.plugins.tooltip.enabled = this.checked;
-        chart.update('none');
+        
+        // Safely update chart with error handling
+        try {
+            chart.update('none');
+        } catch (error) {
+            console.error('Error updating chart:', error);
+        }
         
         console.log(`Market tooltips ${this.checked ? 'enabled' : 'disabled'}`);
     });
