@@ -184,27 +184,6 @@ window.debugCandlestick = {
         
         const endTime = performance.now();
         console.log(`Timing check completed in ${endTime - startTime}ms`);
-    }
-};
-
-// Auto-run basic checks on load
-window.addEventListener('load', function() {
-    setTimeout(() => {
-        console.log('🔍 Running automatic candlestick debug checks...');
-        window.debugCandlestick.checkDataState();
-        window.debugCandlestick.checkTimingIssues();
-        
-        console.log('💡 Available debug commands:');
-        console.log('  - debugCandlestick.checkDataState()');
-        console.log('  - debugCandlestick.forceReloadCandlestick()');
-        console.log('  - debugCandlestick.testPatternDetection()');
-        console.log('  - debugCandlestick.testWithGuaranteedPatterns()');
-        console.log('  - debugCandlestick.injectTestPatterns()');
-        console.log('  - debugCandlestick.checkPatternCaching()');
-    }, 2000);
-});terns not available');
-            return [];
-        }
     },
     
     // Generate test data with guaranteed patterns
@@ -284,4 +263,25 @@ window.addEventListener('load', function() {
             
             return patterns;
         } else {
-            console.log('CandlestickPat
+            console.log('CandlestickPatterns not available');
+            return [];
+        }
+    }
+};
+
+// Auto-run basic checks on load
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        console.log('🔍 Running automatic candlestick debug checks...');
+        window.debugCandlestick.checkDataState();
+        window.debugCandlestick.checkTimingIssues();
+        
+        console.log('💡 Available debug commands:');
+        console.log('  - debugCandlestick.checkDataState()');
+        console.log('  - debugCandlestick.forceReloadCandlestick()');
+        console.log('  - debugCandlestick.testPatternDetection()');
+        console.log('  - debugCandlestick.testWithGuaranteedPatterns()');
+        console.log('  - debugCandlestick.injectTestPatterns()');
+        console.log('  - debugCandlestick.checkPatternCaching()');
+    }, 2000);
+});

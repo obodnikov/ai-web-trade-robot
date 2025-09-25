@@ -420,7 +420,7 @@ async function loadCandlestickPatternsEngine() {
     }
 }
 
-// Create candlestick chart with pattern highlighting
+// Create candlestick chart with pattern highlighting - NO TOOLTIPS AT ALL
 function createCandlestickChart(canvasId, data, patterns) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) {
@@ -534,40 +534,7 @@ function createCandlestickChart(canvasId, data, patterns) {
                     position: 'top'
                 },
                 tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    backgroundColor: 'rgba(0, 0, 0, 0.95)',
-                    titleColor: 'white',
-                    bodyColor: 'white',
-                    borderColor: '#3498db',
-                    borderWidth: 2,
-                    cornerRadius: 8,
-                    displayColors: false,
-                    padding: 15,
-                    bodySpacing: 6,
-                    titleSpacing: 6,
-                    caretPadding: 10,
-                    yAlign: 'top',
-                    xAlign: 'center',
-                    position: 'average',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
-                    callbacks: {
-                        afterBody: function(context) {
-                            const index = context[0].dataIndex;
-                            const originalIndex = index + startIndex;
-                            const pattern = patterns.find(p => p.index === originalIndex);
-                            if (pattern) {
-                                return [
-                                    ``, 
-                                    `🎯 Pattern: ${pattern.emoji} ${pattern.name}`, 
-                                    `Confidence: ${Math.round(pattern.confidence * 100)}%`, 
-                                    `Type: ${pattern.bullish ? 'Bullish ⬆️' : 'Bearish ⬇️'}`,
-                                    `Description: ${pattern.description}`
-                                ];
-                            }
-                            return [];
-                        }
-                    }
+                    enabled: false  // DISABLE ALL TOOLTIPS FOR CANDLESTICK CHART
                 }
             },
             scales: {
@@ -596,16 +563,17 @@ function createCandlestickChart(canvasId, data, patterns) {
         }
     });
     
-    // Add pattern highlighting with cleaner markers (no labels)
+    // Add pattern highlighting
     if (adjustedPatterns.length > 0) {
         addPatternHighlights(candlestickChart, adjustedPatterns, labels);
     }
     
-    console.log(`📈 Chart created with ${CANDLESTICK_CHART_CANDLES} candles and ${adjustedPatterns.length} visible patterns`);
+    console.log(`📈 Candlestick chart created with ${CANDLESTICK_CHART_CANDLES} candles and ${adjustedPatterns.length} visible patterns (no tooltips)`);
     return candlestickChart;
 }
 
-// Add pattern highlighting to chart
+
+// Add pattern highlighting to chart - SIMPLIFIED VERSION WITHOUT ANY TOOLTIPS
 function addPatternHighlights(chart, patterns, labels) {
     const originalDraw = chart.draw;
     
@@ -627,7 +595,7 @@ function addPatternHighlights(chart, patterns, labels) {
                 
                 if (isNaN(x) || isNaN(y)) return;
                 
-                // Pattern marker circle - larger and more visible
+                // Pattern marker circle
                 ctx.fillStyle = pattern.bullish ? 'rgba(46, 204, 113, 0.9)' : 'rgba(231, 76, 60, 0.9)';
                 ctx.strokeStyle = pattern.bullish ? '#27ae60' : '#e74c3c';
                 ctx.lineWidth = 3;
@@ -637,7 +605,7 @@ function addPatternHighlights(chart, patterns, labels) {
                 ctx.fill();
                 ctx.stroke();
                 
-                // Pattern emoji - slightly larger
+                // Pattern emoji
                 ctx.fillStyle = 'white';
                 ctx.font = 'bold 14px Arial';
                 ctx.textAlign = 'center';
