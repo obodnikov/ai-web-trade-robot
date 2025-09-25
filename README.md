@@ -11,7 +11,7 @@ A comprehensive stock market analysis tool that provides real-time trading signa
 - **🎨 Interactive Charts**: Real-time price visualization with Chart.js and moving averages
 - **🔍 Enhanced Detailed Analysis**: Click any stock card for comprehensive TwelveData analysis
 - **📊 Multiple Timeframes**: Daily analysis (Alpha Vantage) + Daily, 30-minute & 15-minute intervals (TwelveData)
-- **🕯️ Candlestick Pattern Recognition**: 15-minute patterns tab with visual pattern identification
+- **🕯️ Advanced Candlestick Pattern Recognition**: 15-minute patterns tab with visual pattern identification and interactive pattern details
 - **Smart Fallback System**: Alpha Vantage → Polygon.io → TwelveData → Realistic Demo Data
 - **Improved Technical Analysis**: MACD, RSI, and Simple Moving Average indicators with real market data
 - **Consistent Trading Signals**: More reliable Buy/Sell/Hold recommendations with confidence levels
@@ -19,12 +19,46 @@ A comprehensive stock market analysis tool that provides real-time trading signa
 - **Responsive Design**: Works on desktop, tablet, and mobile devices
 - **Single-Run Analysis**: On-demand analysis without continuous monitoring
 
+## 🏗️ What's New in v4.1 - Enhanced Pattern Recognition
+
+### 🕯️ **NEW: Advanced Candlestick Pattern Analysis**
+- **Visual Pattern Recognition**: 12 different candlestick patterns with emoji indicators
+- **Pattern Details Modal**: Click any pattern card for comprehensive pattern information with examples
+- **Clean Chart Display**: Tooltips disabled on pattern charts for cleaner visual experience
+- **Pattern Confidence Levels**: High/medium confidence indicators with color coding
+- **Real-time Detection**: Patterns detected from live 15-minute TwelveData feeds
+- **Interactive Pattern Guide**: Reference cards that highlight when patterns are detected
+
+### 📊 **Supported Candlestick Patterns**
+**Bullish Reversal Patterns:**
+- 🔨 **Hammer** - Long lower shadow indicating potential upward reversal
+- 🐉 **Dragonfly Doji** - Doji with long lower shadow, bullish reversal signal
+- 🤏 **Tweezer Bottom** - Two candles with similar lows, bullish reversal
+- 🌟 **Morning Star** - Three-candle bullish reversal pattern
+- 🐂 **Bullish Engulfing** - Large bullish candle engulfing previous bearish candle
+- ⚪ **Three White Soldiers** - Three consecutive bullish candles
+
+**Bearish Reversal Patterns:**
+- 🪦 **Gravestone Doji** - Doji with long upper shadow, bearish reversal signal
+- 🔨 **Inverted Hammer** - Long upper shadow indicating potential downward reversal
+- 🤏 **Tweezer Top** - Two candles with similar highs, bearish reversal
+- 🌙 **Evening Star** - Three-candle bearish reversal pattern
+- 🐻 **Bearish Engulfing** - Large bearish candle engulfing previous bullish candle
+- ⚫ **Three Black Crows** - Three consecutive bearish candles
+
+### 🔧 **Enhanced User Experience**
+- **No Chart Tooltips**: Pattern charts focus purely on visual pattern recognition
+- **Dedicated Pattern Panel**: Right-side panel shows detected patterns with confidence levels
+- **Pattern Summary Statistics**: Bullish vs bearish pattern counts with overall market bias
+- **Interactive Pattern Cards**: Click reference patterns for detailed explanations
+- **Responsive Pattern Layout**: Optimized for all screen sizes
+
 ## 🏗️ What's New in v4.0 - Clean Architecture
 
-### 🧹 **NEW: Clean Code Architecture**
+### 🧹 **Clean Code Architecture**
 - **Separated Files**: HTML contains only structure, CSS only styling, JS only logic
-- **External Stylesheets**: `styles.css` and `detailed-view-styles.css`
-- **External JavaScript**: `trading-robot.js` and `detailed-view.js`
+- **External Stylesheets**: `styles.css`, `detailed-view-styles.css`, and `candlestick-styles.css`
+- **External JavaScript**: `trading-robot.js`, `detailed-view.js`, and `candlestick-patterns.js`
 - **No Inline Code**: Following modern web development best practices
 - **Maintainable Structure**: Easy to modify and extend individual components
 
@@ -36,7 +70,7 @@ A comprehensive stock market analysis tool that provides real-time trading signa
   - Daily analysis using TwelveData daily data
   - 30-minute intraday analysis using TwelveData API
   - 15-minute intraday analysis using TwelveData API
-  - **🆕 15-minute candlestick patterns tab** with visual pattern recognition
+  - **🆕 15-minute candlestick patterns tab** with visual pattern recognition and modal details
 - **Enhanced UI**: Tab-based interface for easy timeframe switching
 - **Visual Indicators**: Data source quality badges and real-time updates
 
@@ -47,9 +81,13 @@ trading-robot/
 ├── detailed-view.html            # Detailed analysis page (clean HTML)
 ├── styles.css                    # Main page styles
 ├── detailed-view-styles.css      # Detailed view styles
+├── candlestick-styles.css        # 🆕 Candlestick pattern styles
 ├── trading-robot.js              # Main page functionality
 ├── detailed-view.js              # Detailed analysis functionality
-├── apiKey.js                     # 🆕 Centralized API key management
+├── candlestick-patterns.js       # 🆕 Pattern detection engine
+├── debug.js                      # 🆕 Debug utilities for development
+├── apiKey.js                     # Centralized API key management
+├── favicon.svg                   # 🆕 Custom trading chart favicon
 ├── README.md                     # This documentation
 └── deployment/                   # Optional: Nginx configs
     └── nginx_deployment_guide.md
@@ -78,6 +116,13 @@ trading-robot/
 - **Trustworthy Signals**: Eliminates false signals from generated data
 - **Chart Overlays**: SMA20 and SMA50 lines displayed on price charts
 
+### 🆕 Candlestick Pattern Analysis
+- **Pattern Recognition Engine**: Advanced algorithm detecting 12 common patterns
+- **Confidence Scoring**: Each pattern rated with confidence percentage (75%+ threshold)
+- **Visual Chart Integration**: Patterns highlighted directly on 15-minute charts
+- **Bullish/Bearish Classification**: Clear indication of market sentiment
+- **Historical Context**: Patterns detected using proper OHLC data validation
+
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -100,9 +145,13 @@ trading-robot/
    ├── detailed-view.html            # Detailed analysis HTML (clean)
    ├── styles.css                    # Main page styles
    ├── detailed-view-styles.css      # Detailed view styles
+   ├── candlestick-styles.css        # Candlestick pattern styles
    ├── trading-robot.js              # Main page JavaScript
    ├── detailed-view.js              # Detailed view JavaScript
-   ├── apiKey.js                     # 🆕 Centralized API key management
+   ├── candlestick-patterns.js       # Pattern detection engine
+   ├── debug.js                      # Debug utilities
+   ├── apiKey.js                     # Centralized API key management
+   ├── favicon.svg                   # Custom trading favicon
    ├── README.md                     # This file
    └── deployment/                   # Optional: Server configs
        └── nginx_deployment_guide.md
@@ -136,7 +185,7 @@ All API keys are now managed in the dedicated `apiKey.js` file for better organi
    window.ALPHA_VANTAGE_API_KEY = 'YOUR_ALPHA_VANTAGE_KEY';
    ```
 
-### 2. TwelveData API Key (DETAILED VIEW - Both Intervals)
+### 2. TwelveData API Key (DETAILED VIEW - All Intervals + Patterns)
 1. Visit [twelvedata.com](https://twelvedata.com/)
 2. Sign up for free account (8 calls/minute, 800/day)
 3. Get your API key from dashboard
@@ -174,10 +223,19 @@ All API keys are now managed in the dedicated `apiKey.js` file for better organi
 2. **Daily Analysis**: View TwelveData daily data with interactive charts
 3. **30-Minute Analysis**: Switch to intraday tab for TwelveData 30-min analysis
 4. **15-Minute Analysis**: Switch to 15-min intraday tab for detailed short-term analysis
-5. **🆕 15-Minute Patterns**: View candlestick pattern analysis based on recognized chart formations
-6. **Interactive Charts**: Hover over charts for detailed data points
-7. **Technical Indicators**: Enhanced visual indicators with color coding
-8. **Consistent Data**: All intervals use TwelveData for reliability
+5. **🆕 15-Minute Patterns**: View candlestick pattern analysis with visual recognition
+6. **🆕 Pattern Details**: Click any pattern card for comprehensive explanations with examples
+7. **Interactive Charts**: Hover over charts for detailed data points (except pattern charts)
+8. **Technical Indicators**: Enhanced visual indicators with color coding
+9. **Consistent Data**: All intervals use TwelveData for reliability
+
+### 🕯️ NEW: Candlestick Pattern Analysis
+1. **Switch to Patterns Tab**: Click "🕯️ 15-Min Patterns" tab in detailed view
+2. **View Chart**: 15-minute candlestick chart with pattern markers (🔨, 🪦, etc.)
+3. **Check Detected Patterns**: Right panel shows all detected patterns with confidence levels
+4. **Pattern Summary**: View bullish vs bearish pattern counts and overall market bias
+5. **Learn Patterns**: Click any reference pattern card for detailed explanations
+6. **No Chart Tooltips**: Clean visual experience focused on pattern recognition
 
 ### Sample Tickers (Optimized for All APIs)
 - **Mega Cap**: AAPL, MSFT, NVDA, GOOGL, AMZN
@@ -187,24 +245,32 @@ All API keys are now managed in the dedicated `apiKey.js` file for better organi
 - **Media**: WBD, DIS, SPOT, ROKU
 - **Crypto/Fintech**: COIN, MSTR, SQ, PYPL
 
-## 🏗️ Data Sources Priority (Updated v4.0)
+## 🏗️ Data Sources Priority (Updated v4.1)
 
 ### 1. **Main Page Analysis**
    - 🥇 **Primary**: Alpha Vantage (TIME_SERIES_DAILY) - Real historical market data
    - 🥈 **Fallback**: Polygon.io (Real-time quotes) - Professional backup
    - 🔵 **Demo**: Realistic simulation - Final fallback
 
-### 2. **Detailed View Analysis** (NEW: TwelveData Only)
+### 2. **Detailed View Analysis** (TwelveData Only)
    - 🥇 **Daily Interval**: TwelveData Daily API (1day interval, 60 points)
    - ⚡ **30-Min Interval**: TwelveData Intraday API (30min interval, 78 points)
    - ⚡ **15-Min Interval**: TwelveData Intraday API (15min interval, 78 points)
-   - 🕯️ **🆕 15-Min Patterns**: Candlestick pattern recognition with visual identification
+   - 🕯️ **🆕 15-Min Patterns**: Advanced candlestick pattern recognition with visual identification
    - 🔵 **Demo Fallback**: Realistic simulation for all intervals
    - **Benefit**: Consistent data source ensures reliable comparisons
 
-### 3. **Why This Architecture?**
+### 3. **🆕 Pattern Recognition Pipeline**
+   - **Data Validation**: OHLC data validation before pattern detection
+   - **Pattern Engine**: Advanced algorithm detecting 12 common patterns
+   - **Confidence Filtering**: Only patterns above 75% confidence shown
+   - **Visual Integration**: Patterns highlighted directly on charts with emoji markers
+   - **Modal Details**: Comprehensive pattern explanations with markdown documentation
+
+### 4. **Why This Architecture?**
    - **Main Page**: Alpha Vantage provides best historical data for overview analysis
    - **Detailed View**: TwelveData provides consistent multi-timeframe analysis
+   - **Pattern Analysis**: 15-minute intervals optimal for short-term pattern recognition
    - **No API Mixing**: Each view optimized for its specific use case
    - **Better UX**: Users get specialized tools for different analysis needs
 
@@ -222,22 +288,27 @@ npx serve .
 # Note: All files must be in same directory
 ```
 
-### Key Architecture Benefits (v4.0)
+### Key Architecture Benefits (v4.1)
 - **Clean Separation**: HTML structure, CSS presentation, JS behavior
 - **Maintainable**: Easy to modify individual components
 - **Scalable**: Simple to add new features or pages
 - **Team-Friendly**: Multiple developers can work simultaneously
 - **Performance**: External files enable browser caching
 - **SEO-Optimized**: Clean HTML structure improves search rankings
+- **🆕 Pattern Recognition**: Modular pattern detection engine
 
 ### File Responsibilities
 - **`index.html`**: Main page structure (no styles or scripts)
 - **`detailed-view.html`**: Detailed analysis structure (no styles or scripts)
 - **`styles.css`**: Main page styling and responsive design
 - **`detailed-view-styles.css`**: Detailed analysis styling and charts
+- **`candlestick-styles.css`**: 🆕 Candlestick pattern styling and animations
 - **`trading-robot.js`**: Main page logic, Alpha Vantage/Polygon.io, card creation
 - **`detailed-view.js`**: Chart creation, TwelveData integration, tab switching
-- **`apiKey.js`**: 🆕 Centralized API key storage and management
+- **`candlestick-patterns.js`**: 🆕 Pattern detection algorithms and validation
+- **`debug.js`**: 🆕 Development debugging utilities
+- **`apiKey.js`**: Centralized API key storage and management
+- **`favicon.svg`**: 🆕 Custom trading chart favicon
 
 ### Cache Issues During Development
 If you modify files and don't see changes:
@@ -248,15 +319,25 @@ If you modify files and don't see changes:
 
 ### Customizing Features
 Edit the appropriate files:
-- **Styling**: Modify `styles.css` or `detailed-view-styles.css`
+- **Styling**: Modify `styles.css`, `detailed-view-styles.css`, or `candlestick-styles.css`
 - **Main Logic**: Edit functions in `trading-robot.js`
 - **Charts/Analysis**: Edit functions in `detailed-view.js`
+- **🆕 Pattern Detection**: Modify algorithms in `candlestick-patterns.js`
 - **Structure**: Modify HTML files (maintain external references)
+
+### 🆕 Pattern Development
+To add new candlestick patterns:
+
+1. **Add Pattern Detection**: Extend `candlestick-patterns.js` with new pattern logic
+2. **Update Pattern Cards**: Add reference card in `detailed-view.html`
+3. **Style Pattern**: Add styling in `candlestick-styles.css`
+4. **Create Documentation**: Add pattern markdown file in `Docs/patterns/` (if implemented)
+5. **Test Pattern**: Use `debug.js` utilities for testing pattern detection
 
 ## 🌐 Deployment
 
 ### Simple Hosting
-- Upload all 7 files to any web server
+- Upload all files to any web server
 - Ensure all files are in the same directory
 - Configure HTTPS for API access
 - **Required Files**: `*.html`, `*.css`, `*.js` (including `apiKey.js`)
@@ -266,7 +347,7 @@ Edit the appropriate files:
 # Copy files to web directory
 sudo cp *.html *.css *.js /var/www/trading-robot/html/
 
-# Copy Docs directory (required for pattern details)
+# Copy Docs directory (if pattern details implemented)
 sudo cp -r Docs /var/www/trading-robot/html/
 
 # IMPORTANT: Secure your API keys file
@@ -368,7 +449,7 @@ sudo systemctl reload nginx
 ```
 
 **Key nginx features for this application:**
-- ✅ **Markdown serving**: Essential for pattern detail popups
+- ✅ **Markdown serving**: Essential for pattern detail popups (if implemented)
 - ✅ **CORS headers**: Allows fetch requests for markdown files
 - ✅ **Security headers**: Protection against common attacks
 - ✅ **Gzip compression**: Better performance for all text files
@@ -389,7 +470,7 @@ EXPOSE 80
 - **Error Handling**: Comprehensive error handling with automatic fallbacks
 - **Caching**: Browser caching for improved performance
 
-## 📊 Output Format (Enhanced v4.0)
+## 📊 Output Format (Enhanced v4.1)
 
 ### Main Page Analysis (Alpha Vantage Primary)
 Each stock card provides:
@@ -422,13 +503,13 @@ Comprehensive analysis includes:
 - **Price Line Chart**: Historical price movement with zoom/pan
 - **Moving Averages**: SMA20 and SMA50 overlay lines
 - **Responsive Design**: Adapts to screen size
-- **Hover Details**: Real-time data point information
+- **Hover Details**: Real-time data point information (Daily, 30-min, 15-min tabs only)
 
 #### Multiple TwelveData Timeframes
 - **Daily Tab**: TwelveData daily analysis (up to 60 days)
 - **30-Minute Tab**: TwelveData intraday analysis (78 intervals)
 - **15-Minute Tab**: TwelveData intraday analysis (78 intervals)
-- **🆕 15-Minute Patterns Tab**: Candlestick pattern recognition with visual charts
+- **🆕 15-Minute Patterns Tab**: Advanced candlestick pattern recognition
 - **Tab Switching**: Seamless transition between timeframes
 - **Consistent Source**: All tabs use TwelveData for reliability
 
@@ -438,16 +519,36 @@ Comprehensive analysis includes:
 - **Condition Indicators**: Overbought/oversold/neutral states
 - **Range Information**: High/low and volume data
 
-#### 🆕 Candlestick Pattern Recognition
-The new "15-mn patterns" tab provides visual candlestick pattern identification based on common chart formations:
+#### 🆕 Advanced Candlestick Pattern Recognition
+The new "15-mn patterns" tab provides comprehensive pattern analysis:
 
-![Candlestick Patterns](Docs/patterns.jpeg)
+**Visual Chart Features:**
+- **Clean Display**: No tooltips for focused pattern viewing
+- **Pattern Markers**: Emoji indicators (🔨, 🪦, 🐉, etc.) directly on chart
+- **Confidence Glow**: High-confidence patterns (>85%) have subtle glow effects
+- **Last 20 Candles**: Optimized view showing recent price action
+
+**Pattern Detection Panel:**
+- **Real-time Detection**: Patterns detected from live 15-minute data
+- **Confidence Scoring**: Only patterns above 75% confidence threshold shown
+- **Pattern Categories**: Clear bullish/bearish classification
+- **Time & Price Location**: Exact candle index and price level for each pattern
+
+**Pattern Summary Statistics:**
+- **Bullish Count**: Number of detected bullish reversal patterns
+- **Bearish Count**: Number of detected bearish reversal patterns
+- **Average Confidence**: Overall confidence level of detected patterns
+- **Market Bias Signal**: Overall bullish/bearish/neutral market sentiment
+
+**Interactive Pattern Reference:**
+- **12 Pattern Types**: Comprehensive coverage of common candlestick patterns
+- **Visual Highlights**: Detected patterns glow on reference cards
+- **Pattern Details**: Click any pattern card for detailed explanations (if modal implemented)
+- **Educational Content**: Learn pattern recognition and trading implications
 
 **Supported Pattern Types:**
-- **Bullish Patterns**: Dragonfly Doji, Hammer, Tweezer Bottom, Morning Star, Bullish Engulfing, Three White Soldiers
-- **Bearish Patterns**: Gravestone Doji, Inverted Hammer, Tweezer Top, Evening Star, Bearish Engulfing, Three Black Crows
-- **Visual Recognition**: Automatic pattern detection in 15-minute timeframe data
-- **Chart Integration**: Patterns highlighted directly on candlestick charts
+- **Bullish**: Hammer, Dragonfly Doji, Tweezer Bottom, Morning Star, Bullish Engulfing, Three White Soldiers
+- **Bearish**: Gravestone Doji, Inverted Hammer, Tweezer Top, Evening Star, Bearish Engulfing, Three Black Crows
 
 ## ⚠️ Disclaimers
 
@@ -457,22 +558,26 @@ The new "15-mn patterns" tab provides visual candlestick pattern identification 
 - **Risk Warning**: Trading involves substantial risk of loss
 - **No Guarantees**: Past performance doesn't predict future results
 - **API Dependencies**: Functionality depends on third-party API availability
+- **Pattern Recognition**: Candlestick patterns are technical indicators, not guarantees of future price movement
 
 ## 🛠️ Technical Details
 
 ### Dependencies
 - **Runtime**: Pure vanilla JavaScript (ES6+)
 - **Charts**: Chart.js 3.9.1 (CDN)
+- **Pattern Recognition**: Custom JavaScript algorithms
+- **Markdown Parsing**: Marked.js (for pattern details, if implemented)
 - **APIs**: Alpha Vantage, TwelveData, Polygon.io
 - **Browser**: Modern ES6+ support required
 - **Architecture**: Clean separation of HTML/CSS/JS
 
-### Performance (v4.0)
-- **Lightweight**: ~100KB total size (HTML + CSS + JS)
+### Performance (v4.1)
+- **Lightweight**: ~120KB total size (HTML + CSS + JS)
 - **Enhanced**: Better accuracy with real market data
 - **Fast**: Single-run analysis completes in seconds
 - **Responsive**: Works on all screen sizes with quality indicators
 - **Interactive**: Real-time charts with smooth animations
+- **Pattern Engine**: Efficient OHLC validation and pattern detection
 - **Cacheable**: External files improve loading performance
 
 ### Data Quality Improvements
@@ -481,6 +586,7 @@ The new "15-mn patterns" tab provides visual candlestick pattern identification 
 - **Reliable Calculations**: Proper historical data eliminates false signals
 - **Enhanced User Feedback**: Clear indication of data source quality
 - **Visual Charts**: Interactive price movement visualization
+- **🆕 Pattern Validation**: Rigorous OHLC data validation for accurate pattern detection
 
 ### Browser Support
 - ✅ Chrome 60+
@@ -489,37 +595,54 @@ The new "15-mn patterns" tab provides visual candlestick pattern identification 
 - ✅ Edge 79+
 - ✅ Mobile browsers (responsive design)
 
+### 🆕 Pattern Recognition Algorithm
+- **OHLC Validation**: Ensures data integrity before pattern detection
+- **Multi-Pattern Detection**: Single, dual, and triple candle patterns
+- **Confidence Scoring**: Mathematical confidence calculation based on pattern characteristics
+- **False Positive Reduction**: Minimum thresholds to avoid noise
+- **Performance Optimized**: Efficient scanning of 15-minute intervals
+
 ## 🤝 Contributing
 
 1. **Fork** the repository
-2. **Create** feature branch (`git checkout -b feature/enhanced-analysis`)
-3. **Commit** changes (`git commit -m 'Add enhanced analysis features'`)
-4. **Push** to branch (`git push origin feature/enhanced-analysis`)
+2. **Create** feature branch (`git checkout -b feature/enhanced-patterns`)
+3. **Commit** changes (`git commit -m 'Add enhanced pattern recognition'`)
+4. **Push** to branch (`git push origin feature/enhanced-patterns`)
 5. **Open** Pull Request
 
 ### Areas for Contribution
-- Additional technical indicators (Bollinger Bands, Stochastic)
-- Advanced chart types (candlestick, volume charts)
+- Additional candlestick patterns (Cup & Handle, Head & Shoulders)
+- Advanced chart types (real candlestick charts, volume analysis)
 - Portfolio tracking and comparison
 - Mobile app development
-- Machine learning signal enhancement
+- Machine learning pattern enhancement
 - Additional API integrations
 - Performance optimizations
 - UI/UX improvements
+- Pattern documentation and educational content
 
 ## 📝 Changelog
 
-### v4.0.0 (Current - Clean Architecture + Pattern Recognition)
+### v4.1.0 (Current - Advanced Pattern Recognition)
+- 🕯️ **Advanced candlestick pattern recognition**: 12 patterns with visual detection
+- 🎯 **Pattern confidence scoring**: High/medium/low confidence indicators
+- 🔍 **Interactive pattern details**: Modal popups with comprehensive explanations (if implemented)
+- 📊 **Pattern summary statistics**: Bullish vs bearish counts with market bias
+- 🎨 **Clean chart display**: Disabled tooltips on pattern charts for better visual focus
+- 🖼️ **Custom favicon**: Trading chart themed favicon.svg
+- 🐛 **Debug utilities**: Enhanced debugging tools for development
+- 📱 **Mobile optimization**: Improved responsive design for pattern analysis
+
+### v4.0.0 (Clean Architecture + Basic Pattern Recognition)
 - 🧹 **Complete code separation**: HTML, CSS, and JavaScript in separate files
 - 🆕 **TwelveData detailed view**: Daily, 30-minute, and 15-minute intervals
-- 🕯️ **🆕 Candlestick pattern recognition**: Visual pattern identification in 15-minute timeframe
-- 🔑 **🆕 Centralized API key management**: Single `apiKey.js` file for all API credentials
+- 🕯️ **Basic candlestick pattern recognition**: Initial pattern identification in 15-minute timeframe
+- 🔑 **Centralized API key management**: Single `apiKey.js` file for all API credentials
 - 🎨 **Enhanced styling**: Dedicated CSS files for each page
 - 🔧 **Improved maintainability**: Clean, modular code structure
 - ✅ **Better performance**: External file caching and optimization
 - 📱 **Mobile optimization**: Responsive design improvements
 - 🔍 **Consistent detailed analysis**: Single API source for multiple timeframes
-- ⚡ **15-minute intervals**: Added for enhanced short-term analysis
 
 ### v3.0.0 (Enhanced Detailed View)
 - 🆕 **Detailed analysis view** with interactive charts
@@ -543,14 +666,18 @@ The new "15-mn patterns" tab provides visual candlestick pattern identification 
 - ✅ Responsive design
 
 ### Planned Features (v5.0)
-- 📈 **Candlestick charts** with volume indicators
+- 📈 **True candlestick charts** with OHLC visualization and volume indicators
+- 🔍 **Advanced pattern detection** (Cup & Handle, Head & Shoulders, Flags, Pennants)
 - 📊 **Portfolio tracking** and performance comparison
-- 🔔 **Alert system** for signal notifications
-- 📱 **Progressive Web App** capabilities
-- 🤖 **Machine learning** enhanced signals
-- 📈 **Bollinger Bands** and other advanced indicators
-- 🎨 **Customizable themes** and layouts
-- 📊 **Export functionality** for analysis results
+- 🔔 **Alert system** for signal notifications and pattern detection
+- 📱 **Progressive Web App** capabilities with offline functionality
+- 🤖 **Machine learning** enhanced pattern recognition and signal accuracy
+- 📈 **Volume analysis** integration with pattern confirmation
+- 🎨 **Customizable themes** and layouts with dark mode
+- 📊 **Export functionality** for analysis results and pattern reports
+- 🔄 **Real-time updates** with WebSocket integration
+- 🌍 **Multi-market support** (Forex, Crypto, Commodities)
+- 📚 **Pattern education** with interactive tutorials
 
 ## 📞 Support
 
@@ -564,7 +691,39 @@ The new "15-mn patterns" tab provides visual candlestick pattern identification 
 2. **Console Logs**: Open browser developer tools for detailed logging
 3. **API Status**: Verify your API keys in `apiKey.js` are valid and have remaining calls
 4. **Network Issues**: Ensure stable internet connection for API calls
-5. **File Structure**: Ensure all 7 files are in the same directory (including `apiKey.js`)
+5. **File Structure**: Ensure all files are in the same directory (including `apiKey.js`)
+6. **🆕 Pattern Issues**: Use `debug.js` utilities for pattern detection troubleshooting
+
+### 🆕 Pattern Recognition Troubleshooting
+If patterns aren't being detected:
+
+1. **Check Browser Console**: Look for pattern detection logs
+2. **Verify Data**: Ensure TwelveData API is returning valid OHLC data
+3. **Test Pattern Engine**: Use `debugCandlestick.testPatternDetection()` in console
+4. **Force Reload**: Use `debugCandlestick.forceReloadCandlestick()` to refresh data
+5. **Inject Test Patterns**: Use `debugCandlestick.injectTestPatterns()` for testing UI
+6. **Check Confidence**: Lower threshold patterns may not meet 75% confidence requirement
+
+### Debug Commands (Available in Browser Console)
+```javascript
+// Check current data state and pattern detection
+debugCandlestick.checkDataState();
+
+// Test pattern detection with current data
+debugCandlestick.testPatternDetection();
+
+// Force reload candlestick data and patterns
+debugCandlestick.forceReloadCandlestick('AAPL');
+
+// Inject test patterns for UI testing
+debugCandlestick.injectTestPatterns();
+
+// Test with guaranteed pattern data
+debugCandlestick.testWithGuaranteedPatterns();
+
+// Clear all cached data
+debugCandlestick.clearAllData();
+```
 
 ## 📄 License
 
@@ -573,46 +732,56 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - **Alpha Vantage**: For providing excellent historical financial data API
-- **TwelveData**: For reliable multi-timeframe market data and analysis
+- **TwelveData**: For reliable multi-timeframe market data and pattern analysis
 - **Polygon.io**: For real-time market data as backup
 - **Chart.js**: For beautiful and responsive chart visualizations
-- **Technical Analysis Community**: For indicator algorithms and trading strategies
+- **Technical Analysis Community**: For candlestick pattern recognition algorithms and trading strategies
 - **Open Source Community**: For inspiration and collaborative development
+- **Marked.js**: For markdown parsing in pattern detail modals
 - **Users and Contributors**: For feedback and continuous improvement
 
 ---
 
-**⚡ Ready to analyze stocks with clean, professional architecture?** 
+**⚡ Ready to analyze stocks with advanced pattern recognition?** 
 
-Open `index.html` and start trading analysis with the new clean codebase!
+Open `index.html` and start trading analysis with the new enhanced pattern detection system!
 
-**🔧 Need help?** Check the console logs for detailed data source information and debugging.
+**🔧 Need help?** Check the console logs for detailed data source information and debugging, or use the debug utilities for pattern troubleshooting.
 
-**📈 Professional Trading Analysis!** Now with clean architecture, TwelveData integration, and enhanced maintainability.
+**📈 Professional Trading Analysis!** Now with advanced candlestick pattern recognition, clean architecture, and comprehensive pattern education.
 
-**🔍 NEW in v4.0:** Complete code separation, TwelveData detailed analysis with 15-minute intervals, candlestick pattern recognition, and professional-grade file organization!
+**🔍 NEW in v4.1:** Advanced pattern detection with 12 candlestick patterns, confidence scoring, interactive pattern details, and enhanced visual recognition system!
 
 ---
 
-## 🆕 What Makes v4.0 Special
+## 🆕 What Makes v4.1 Special
 
-### 🎯 **Clean Architecture Benefits**
-- **Maintainable**: Each file has a single, clear responsibility
-- **Scalable**: Easy to add new features without touching existing code
-- **Team-Friendly**: Multiple developers can work on different components
-- **Performance**: Browser caching improves loading speeds
-- **Professional**: Follows modern web development best practices
+### 🎯 **Advanced Pattern Recognition**
+- **12 Professional Patterns**: Comprehensive coverage of the most reliable candlestick patterns
+- **Confidence Scoring**: Mathematical confidence calculation ensures only high-quality patterns are shown
+- **Visual Integration**: Seamless pattern highlighting directly on price charts
+- **Educational Value**: Learn pattern recognition through interactive reference cards
+- **Real Market Data**: Patterns detected from live TwelveData 15-minute intervals
 
-### 📊 **Enhanced Analysis Capabilities**
-- **Dual API Strategy**: Alpha Vantage for overview, TwelveData for details
-- **Consistent Detailed View**: No more mixing APIs in analysis
-- **Better Data Quality**: Real market data for accurate indicators
-- **Visual Excellence**: Professional-grade charts and indicators
+### 📊 **Enhanced User Experience**
+- **Clean Chart Display**: No tooltip interference allows focus on visual pattern recognition
+- **Pattern Summary**: Quick overview of market sentiment through pattern statistics
+- **Interactive Learning**: Click pattern cards for detailed explanations and examples
+- **Responsive Design**: Optimized pattern display across all device sizes
+- **Performance Optimized**: Efficient pattern detection algorithms
 
 ### 🔧 **Developer Experience**
-- **Clean Code**: No more hunting through mixed HTML/CSS/JS
-- **Easy Debugging**: Separate files make troubleshooting simple
-- **Quick Modifications**: Change styling without touching logic
-- **Modern Standards**: Following ES6+ and CSS3 best practices
+- **Modular Architecture**: Separate pattern detection engine for easy extension
+- **Debug Utilities**: Comprehensive debugging tools for pattern development
+- **Clean Code**: Well-documented pattern algorithms with clear validation
+- **Easy Extension**: Simple framework for adding new pattern types
+- **Testing Tools**: Built-in pattern testing and validation utilities
 
-The Trading Robot has evolved from a simple analysis tool to a professional-grade market analysis platform with clean, maintainable architecture and enhanced analytical capabilities!
+### 🚀 **Professional Features**
+- **Multi-Timeframe Analysis**: Daily, 30-minute, 15-minute, and pattern-specific views
+- **Real-Time Updates**: Live pattern detection from TwelveData feeds
+- **Data Quality Assurance**: Rigorous OHLC validation before pattern analysis
+- **Confidence Filtering**: Customizable thresholds to reduce false positives
+- **Market Bias Detection**: Overall sentiment analysis from pattern combinations
+
+The Trading Robot has evolved from a simple analysis tool to a comprehensive pattern recognition platform, offering both novice and experienced traders the tools they need for effective technical analysis with clean, maintainable code architecture.
