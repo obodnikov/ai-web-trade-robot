@@ -1,410 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Robot - Detailed View</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link rel="stylesheet" href="detailed-view-styles.css">
-    <link rel="stylesheet" href="candlestick-styles.css">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Detailed Stock Analysis</h1>
-            <p id="stockTitle">Loading stock data...</p>
+<!-- Replace the existing candlestick layout in detailed-view.html with this updated version -->
+
+<div class="candlestick-layout">
+    <div class="chart-section">
+        <div class="chart-container">
+            <canvas id="candlestick-chart"></canvas>
         </div>
-
-        <a href="index.html" class="back-button">← Back to Main</a>
-
-        <div class="interval-tabs">
-            <button class="tab-button active" data-tab="daily" id="daily-tab-btn" onclick="switchTab('daily')">📈 Daily Interval</button>
-            <button class="tab-button" data-tab="intraday" id="intraday-tab-btn" onclick="switchTab('intraday')">⚡ 30-Minute Interval</button>
-            <button class="tab-button" data-tab="intraday15" id="intraday15-tab-btn" onclick="switchTab('intraday15')">🚀 15-Minute Interval</button>
-            <button class="tab-button" data-tab="candlestick" id="candlestick-tab-btn" onclick="switchTab('candlestick')">🕯️ 15-Min Patterns</button>
-            <button class="tab-button" data-tab="chatgpt" id="chatgpt-tab-btn" onclick="switchTab('chatgpt')">🤖 AI Analysis</button>
-        </div>
-
-        <!-- Daily Interval Tab -->
-        <div id="daily-tab" class="tab-content active">
-            <div class="detailed-card">
-                <div id="daily-loading" class="loading-spinner">
-                    <div class="spinner"></div>
-                </div>
-                <div id="daily-content" style="display: none;">
-                    <div class="stock-header">
-                        <div>
-                            <div class="stock-symbol" id="daily-symbol">LOADING</div>
-                            <div id="daily-source-info"></div>
-                        </div>
-                        <div>
-                            <div class="stock-price" id="daily-price">$0.00</div>
-                            <div id="daily-change"></div>
-                        </div>
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="daily-chart"></canvas>
-                    </div>
-
-                    <div class="indicators-grid">
-                        <div class="indicator-box">
-                            <div class="indicator-label">RSI (14)</div>
-                            <div class="indicator-value" id="daily-rsi">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">MACD</div>
-                            <div class="indicator-value" id="daily-macd">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">SMA 20</div>
-                            <div class="indicator-value" id="daily-sma20">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">SMA 50</div>
-                            <div class="indicator-value" id="daily-sma50">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">Volume</div>
-                            <div class="indicator-value" id="daily-volume">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">High/Low</div>
-                            <div class="indicator-value" id="daily-range">-</div>
-                        </div>
-                    </div>
-
-                    <div class="signal" id="daily-signal">HOLD - 50% confidence</div>
-
-                    <div class="analysis-section">
-                        <h3>📊 Daily Analysis</h3>
-                        <div id="daily-analysis"></div>
-                    </div>
-                </div>
-                <div id="daily-error" class="error-message" style="display: none;"></div>
+        
+        <!-- NEW: Tooltip Controls -->
+        <div class="tooltip-controls">
+            <div class="tooltip-controls-header">
+                <span class="tooltip-controls-title">🔧 Tooltip Settings</span>
             </div>
-        </div>
-
-        <!-- 30-Minute Interval Tab -->
-        <div id="intraday-tab" class="tab-content">
-            <div class="detailed-card">
-                <div id="intraday-loading" class="loading-spinner">
-                    <div class="spinner"></div>
-                </div>
-                <div id="intraday-content" style="display: none;">
-                    <div class="stock-header">
-                        <div>
-                            <div class="stock-symbol" id="intraday-symbol">LOADING</div>
-                            <div id="intraday-source-info"></div>
-                        </div>
-                        <div>
-                            <div class="stock-price" id="intraday-price">$0.00</div>
-                            <div id="intraday-change"></div>
-                        </div>
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="intraday-chart"></canvas>
-                    </div>
-
-                    <div class="indicators-grid">
-                        <div class="indicator-box">
-                            <div class="indicator-label">RSI (14)</div>
-                            <div class="indicator-value" id="intraday-rsi">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">MACD</div>
-                            <div class="indicator-value" id="intraday-macd">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">SMA 20</div>
-                            <div class="indicator-value" id="intraday-sma20">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">SMA 50</div>
-                            <div class="indicator-value" id="intraday-sma50">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">Avg Volume</div>
-                            <div class="indicator-value" id="intraday-volume">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">30min Range</div>
-                            <div class="indicator-value" id="intraday-range">-</div>
-                        </div>
-                    </div>
-
-                    <div class="signal" id="intraday-signal">HOLD - 50% confidence</div>
-
-                    <div class="analysis-section">
-                        <h3>⚡ 30-Minute Intraday Analysis</h3>
-                        <div id="intraday-analysis"></div>
-                    </div>
-                </div>
-                <div id="intraday-error" class="error-message" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- 15-Minute Interval Tab -->
-        <div id="intraday15-tab" class="tab-content">
-            <div class="detailed-card">
-                <div id="intraday15-loading" class="loading-spinner">
-                    <div class="spinner"></div>
-                </div>
-                <div id="intraday15-content" style="display: none;">
-                    <div class="stock-header">
-                        <div>
-                            <div class="stock-symbol" id="intraday15-symbol">LOADING</div>
-                            <div id="intraday15-source-info"></div>
-                        </div>
-                        <div>
-                            <div class="stock-price" id="intraday15-price">$0.00</div>
-                            <div id="intraday15-change"></div>
-                        </div>
-                    </div>
-
-                    <div class="chart-container">
-                        <canvas id="intraday15-chart"></canvas>
-                    </div>
-
-                    <div class="indicators-grid">
-                        <div class="indicator-box">
-                            <div class="indicator-label">RSI (14)</div>
-                            <div class="indicator-value" id="intraday15-rsi">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">MACD</div>
-                            <div class="indicator-value" id="intraday15-macd">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">SMA 20</div>
-                            <div class="indicator-value" id="intraday15-sma20">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">SMA 50</div>
-                            <div class="indicator-value" id="intraday15-sma50">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">Avg Volume</div>
-                            <div class="indicator-value" id="intraday15-volume">-</div>
-                        </div>
-                        <div class="indicator-box">
-                            <div class="indicator-label">15min Range</div>
-                            <div class="indicator-value" id="intraday15-range">-</div>
-                        </div>
-                    </div>
-
-                    <div class="signal" id="intraday15-signal">HOLD - 50% confidence</div>
-
-                    <div class="analysis-section">
-                        <h3>🚀 15-Minute Intraday Analysis</h3>
-                        <div id="intraday15-analysis"></div>
-                    </div>
-                </div>
-                <div id="intraday15-error" class="error-message" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- NEW: Candlestick Patterns Tab -->
-        <div id="candlestick-tab" class="tab-content">
-            <div class="detailed-card">
-                <div id="candlestick-loading" class="loading-spinner">
-                    <div class="spinner"></div>
-                </div>
-                <div id="candlestick-content" style="display: none;">
-                    <div class="stock-header">
-                        <div>
-                            <div class="stock-symbol" id="candlestick-symbol">LOADING</div>
-                            <div id="candlestick-source-info"></div>
-                        </div>
-                        <div>
-                            <div class="stock-price" id="candlestick-price">$0.00</div>
-                            <div id="candlestick-change"></div>
-                        </div>
-                    </div>
-
-                    <div class="candlestick-layout">
-                        <div class="chart-section">
-                            <div class="chart-container">
-                                <canvas id="candlestick-chart"></canvas>
-                            </div>
-                        </div>
-
-                        <div class="pattern-detection-panel">
-                            <h3>🎯 Detected Patterns</h3>
-                            <div id="detected-patterns-list">
-                                <div class="no-patterns">No patterns detected yet...</div>
-                            </div>
-                            
-                            <div class="pattern-summary" id="pattern-summary" style="display: none;">
-                                <h4>📊 Pattern Summary</h4>
-                                <div class="summary-stats">
-                                    <div class="stat-item">
-                                        <span class="stat-value" id="bullish-count">0</span>
-                                        <span class="stat-label">Bullish</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-value" id="bearish-count">0</span>
-                                        <span class="stat-label">Bearish</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-value" id="avg-confidence">0%</span>
-                                        <span class="stat-label">Avg Confidence</span>
-                                    </div>
-                                </div>
-                                <div class="overall-signal" id="overall-signal">
-                                    NEUTRAL - No clear pattern bias
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pattern-reference-guide">
-                        <h3>📚 Candlestick Pattern Reference</h3>
-                        <div class="patterns-grid">
-                            <div class="pattern-card bullish" data-pattern="hammer">
-                                <div class="pattern-icon">🔨</div>
-                                <h4>Hammer</h4>
-                                <div class="pattern-type">Bullish Reversal</div>
-                            </div>
-                            <div class="pattern-card bullish" data-pattern="dragonfly-doji">
-                                <div class="pattern-icon">🐉</div>
-                                <h4>Dragonfly Doji</h4>
-                                <div class="pattern-type">Bullish Reversal</div>
-                            </div>
-                            <div class="pattern-card bearish" data-pattern="gravestone-doji">
-                                <div class="pattern-icon">🪦</div>
-                                <h4>Gravestone Doji</h4>
-                                <div class="pattern-type">Bearish Reversal</div>
-                            </div>
-                            <div class="pattern-card bearish" data-pattern="inverted-hammer">
-                                <div class="pattern-icon">🔨</div>
-                                <h4>Inverted Hammer</h4>
-                                <div class="pattern-type">Bearish Reversal</div>
-                            </div>
-                            <div class="pattern-card bullish" data-pattern="tweezer-bottom">
-                                <div class="pattern-icon">🤏</div>
-                                <h4>Tweezer Bottom</h4>
-                                <div class="pattern-type">Bullish Reversal</div>
-                            </div>
-                            <div class="pattern-card bearish" data-pattern="tweezer-top">
-                                <div class="pattern-icon">🤏</div>
-                                <h4>Tweezer Top</h4>
-                                <div class="pattern-type">Bearish Reversal</div>
-                            </div>
-                            <div class="pattern-card bullish" data-pattern="morning-star">
-                                <div class="pattern-icon">🌟</div>
-                                <h4>Morning Star</h4>
-                                <div class="pattern-type">Bullish Reversal</div>
-                            </div>
-                            <div class="pattern-card bearish" data-pattern="evening-star">
-                                <div class="pattern-icon">🌙</div>
-                                <h4>Evening Star</h4>
-                                <div class="pattern-type">Bearish Reversal</div>
-                            </div>
-                            <div class="pattern-card bullish" data-pattern="bullish-engulfing">
-                                <div class="pattern-icon">🐂</div>
-                                <h4>Bullish Engulfing</h4>
-                                <div class="pattern-type">Bullish Reversal</div>
-                            </div>
-                            <div class="pattern-card bearish" data-pattern="bearish-engulfing">
-                                <div class="pattern-icon">🐻</div>
-                                <h4>Bearish Engulfing</h4>
-                                <div class="pattern-type">Bearish Reversal</div>
-                            </div>
-                            <div class="pattern-card bullish" data-pattern="three-white-soldiers">
-                                <div class="pattern-icon">⚪</div>
-                                <h4>Three White Soldiers</h4>
-                                <div class="pattern-type">Bullish Continuation</div>
-                            </div>
-                            <div class="pattern-card bearish" data-pattern="three-black-crows">
-                                <div class="pattern-icon">⚫</div>
-                                <h4>Three Black Crows</h4>
-                                <div class="pattern-type">Bearish Continuation</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div id="candlestick-error" class="error-message" style="display: none;"></div>
-            </div>
-        </div>
-
-        <!-- ChatGPT AI Analysis Tab -->
-        <div id="chatgpt-tab" class="tab-content">
-            <div class="detailed-card">
-                <div class="chatgpt-section">
-                    <div class="chatgpt-header">
-                        <h3>🤖 AI-Powered Technical Analysis</h3>
-                        <p>Advanced analysis combining daily and 30-minute interval data for comprehensive trading insights</p>
-                    </div>
-
-                    <div class="chatgpt-controls">
-                        <button class="btn btn-primary" id="generateAnalysisBtn">
-                            🧠 Generate AI Analysis
-                        </button>
-                        <div id="analysis-status" class="analysis-status hidden"></div>
-                    </div>
-
-                    <div class="analysis-container">
-                        <div id="chatgpt-prompt" class="prompt-section" style="display: none;">
-                            <h4>📋 Analysis Prompt:</h4>
-                            <div class="prompt-text" id="prompt-content"></div>
-                        </div>
-
-                        <div id="chatgpt-response" class="response-section" style="display: none;">
-                            <h4>🎯 AI Analysis Results:</h4>
-                            <div class="response-text" id="response-content"></div>
-                        </div>
-
-                        <div id="chatgpt-placeholder" class="placeholder-section">
-                            <div class="placeholder-content">
-                                <h4>🤖 AI Analysis Features</h4>
-                                <div class="feature-list">
-                                    <div class="ai-feature">
-                                        <strong>📊 Multi-Timeframe Analysis:</strong>
-                                        <p>Combines both daily and 30-minute interval technical data for comprehensive insights</p>
-                                    </div>
-                                    <div class="ai-feature">
-                                        <strong>🎯 Trading Strategy Focus:</strong>
-                                        <p>Provides specific recommendations for short-term (intraday), 3-day, and 5-day trading horizons</p>
-                                    </div>
-                                    <div class="ai-feature">
-                                        <strong>📈 Trend Identification:</strong>
-                                        <p>Analyzes primary upward/downward trends and current market sentiment</p>
-                                    </div>
-                                    <div class="ai-feature">
-                                        <strong>⚡ Real-Time Integration:</strong>
-                                        <p>Uses current technical indicators from both daily and intraday data sources</p>
-                                    </div>
-                                </div>
-                                <div class="getting-started">
-                                    <p><strong>To get started:</strong> Load data in the Daily and 30-Minute tabs first, then click "Generate AI Analysis" to create a comprehensive trading analysis.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="tooltip-controls-options">
+                <label class="tooltip-control-item">
+                    <input type="checkbox" id="market-tooltips-checkbox" checked>
+                    <span class="checkbox-custom"></span>
+                    <span class="tooltip-label">📈 Market Data</span>
+                    <span class="tooltip-description">(Price, SMA values)</span>
+                </label>
+                
+                <label class="tooltip-control-item">
+                    <input type="checkbox" id="pattern-tooltips-checkbox" checked>
+                    <span class="checkbox-custom"></span>
+                    <span class="tooltip-label">🎯 Pattern Info</span>
+                    <span class="tooltip-description">(Pattern details, confidence)</span>
+                </label>
             </div>
         </div>
     </div>
 
-    <!-- Pattern Details Modal -->
-    <div id="pattern-modal" class="pattern-modal" style="display: none;">
-        <div class="pattern-modal-content">
-            <div class="pattern-modal-header">
-                <h2 id="pattern-modal-title">Pattern Details</h2>
-                <span class="pattern-modal-close">&times;</span>
+    <div class="pattern-detection-panel">
+        <h3>🎯 Detected Patterns</h3>
+        <div id="detected-patterns-list">
+            <div class="no-patterns">No patterns detected yet...</div>
+        </div>
+        
+        <div class="pattern-summary" id="pattern-summary" style="display: none;">
+            <h4>📊 Pattern Summary</h4>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="bullish-count">0</span>
+                    <span class="stat-label">Bullish</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="bearish-count">0</span>
+                    <span class="stat-label">Bearish</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="avg-confidence">0%</span>
+                    <span class="stat-label">Avg Confidence</span>
+                </div>
             </div>
-            <div class="pattern-modal-body">
-                <div id="pattern-modal-content">Loading...</div>
+            <div class="overall-signal" id="overall-signal">
+                NEUTRAL - No clear pattern bias
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="apiKey.js"></script>
-    <script src="candlestick-patterns.js"></script>
-    <script src="detailed-view.js"></script>
-    <script src="debug.js"></script>
-</body>
-</html>
+</div>
