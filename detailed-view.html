@@ -223,41 +223,65 @@
                         </div>
                     </div>
 
-                    <div class="candlestick-layout">
-                        <div class="chart-section">
-                            <div class="chart-container">
-                                <canvas id="candlestick-chart"></canvas>
-                            </div>
-                        </div>
+<!-- Replace the existing candlestick layout in detailed-view.html with this updated version -->
 
-                        <div class="pattern-detection-panel">
-                            <h3>🎯 Detected Patterns</h3>
-                            <div id="detected-patterns-list">
-                                <div class="no-patterns">No patterns detected yet...</div>
+                <div class="candlestick-layout">
+                    <div class="chart-section">
+                        <div class="chart-container">
+                            <canvas id="candlestick-chart"></canvas>
+                        </div>
+                        
+                        <!-- NEW: Tooltip Controls -->
+                        <div class="tooltip-controls">
+                            <div class="tooltip-controls-header">
+                                <span class="tooltip-controls-title">🔧 Tooltip Settings</span>
                             </div>
-                            
-                            <div class="pattern-summary" id="pattern-summary" style="display: none;">
-                                <h4>📊 Pattern Summary</h4>
-                                <div class="summary-stats">
-                                    <div class="stat-item">
-                                        <span class="stat-value" id="bullish-count">0</span>
-                                        <span class="stat-label">Bullish</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-value" id="bearish-count">0</span>
-                                        <span class="stat-label">Bearish</span>
-                                    </div>
-                                    <div class="stat-item">
-                                        <span class="stat-value" id="avg-confidence">0%</span>
-                                        <span class="stat-label">Avg Confidence</span>
-                                    </div>
-                                </div>
-                                <div class="overall-signal" id="overall-signal">
-                                    NEUTRAL - No clear pattern bias
-                                </div>
+                            <div class="tooltip-controls-options">
+                                <label class="tooltip-control-item">
+                                    <input type="checkbox" id="market-tooltips-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <span class="tooltip-label">📈 Market Data</span>
+                                    <span class="tooltip-description">(Price, SMA values)</span>
+                                </label>
+                                
+                                <label class="tooltip-control-item">
+                                    <input type="checkbox" id="pattern-tooltips-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <span class="tooltip-label">🎯 Pattern Info</span>
+                                    <span class="tooltip-description">(Pattern details, confidence)</span>
+                                </label>
                             </div>
                         </div>
                     </div>
+
+                    <div class="pattern-detection-panel">
+                        <h3>🎯 Detected Patterns</h3>
+                        <div id="detected-patterns-list">
+                            <div class="no-patterns">No patterns detected yet...</div>
+                        </div>
+                        
+                        <div class="pattern-summary" id="pattern-summary" style="display: none;">
+                            <h4>📊 Pattern Summary</h4>
+                            <div class="summary-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value" id="bullish-count">0</span>
+                                    <span class="stat-label">Bullish</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value" id="bearish-count">0</span>
+                                    <span class="stat-label">Bearish</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value" id="avg-confidence">0%</span>
+                                    <span class="stat-label">Avg Confidence</span>
+                                </div>
+                            </div>
+                            <div class="overall-signal" id="overall-signal">
+                                NEUTRAL - No clear pattern bias
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                     <div class="pattern-reference-guide">
                         <h3>📚 Candlestick Pattern Reference</h3>

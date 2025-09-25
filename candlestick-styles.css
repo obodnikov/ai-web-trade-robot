@@ -382,3 +382,175 @@
         padding: 15px;
     }
 }
+
+/* Add these styles to candlestick-styles.css or detailed-view-styles.css */
+
+/* Tooltip Controls */
+.tooltip-controls {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 15px;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.tooltip-controls-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.tooltip-controls-title {
+    font-size: 1em;
+    font-weight: bold;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tooltip-controls-options {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.tooltip-control-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    user-select: none;
+}
+
+.tooltip-control-item:hover {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: #3498db;
+    transform: translateY(-1px);
+}
+
+.tooltip-control-item input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-custom {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #bdc3c7;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.3s ease;
+    background: white;
+    flex-shrink: 0;
+}
+
+.tooltip-control-item input[type="checkbox"]:checked + .checkbox-custom {
+    background: #3498db;
+    border-color: #2980b9;
+}
+
+.tooltip-control-item input[type="checkbox"]:checked + .checkbox-custom::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.tooltip-label {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 0.95em;
+}
+
+.tooltip-description {
+    font-size: 0.85em;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+/* Disabled state styling */
+.tooltip-control-item input[type="checkbox"]:not(:checked) + .checkbox-custom + .tooltip-label {
+    color: #95a5a6;
+}
+
+.tooltip-control-item input[type="checkbox"]:not(:checked) ~ .tooltip-description {
+    color: #bdc3c7;
+}
+
+/* Active state */
+.tooltip-control-item:active {
+    transform: translateY(0px);
+}
+
+/* Focus styles for accessibility */
+.tooltip-control-item:focus-within {
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+    outline: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .tooltip-controls-options {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .tooltip-control-item {
+        padding: 10px 12px;
+    }
+    
+    .tooltip-controls {
+        padding: 12px;
+    }
+    
+    .tooltip-label {
+        font-size: 0.9em;
+    }
+    
+    .tooltip-description {
+        font-size: 0.8em;
+    }
+}
+
+/* Animation for state changes */
+@keyframes checkmark-bounce {
+    0% { transform: translate(-50%, -50%) scale(0.8); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.tooltip-control-item input[type="checkbox"]:checked + .checkbox-custom::after {
+    animation: checkmark-bounce 0.3s ease-out;
+}
+
+/* Hover effects for better UX */
+.tooltip-control-item:hover .checkbox-custom {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.tooltip-control-item:hover .tooltip-label {
+    color: #2980b9;
+}
+
+/* Status indicators */
+.tooltip-controls::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    background: #2ecc71;
+    border-radius: 50%;
+    opacity: 0.7;
+}
