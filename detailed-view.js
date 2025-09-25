@@ -420,7 +420,7 @@ async function loadCandlestickPatternsEngine() {
     }
 }
 
-// Create candlestick chart with pattern highlighting - NO TOOLTIPS AT ALL
+// Updated createCandlestickChart function with configurable tooltips
 function createCandlestickChart(canvasId, data, patterns) {
     const ctx = document.getElementById(canvasId);
     if (!ctx) {
@@ -445,10 +445,6 @@ function createCandlestickChart(canvasId, data, patterns) {
     const prices = filteredData.map(item => parseFloat(item.close));
     
     // Calculate moving averages for filtered data
-    const sma20Data = [];
-    const sma50Data = [];
-    
-    // Use original full dataset for SMA calculation, then slice the results
     const allPrices = data.historicalData.map(item => parseFloat(item.close));
     const fullSma20 = [];
     const fullSma50 = [];
@@ -534,7 +530,46 @@ function createCandlestickChart(canvasId, data, patterns) {
                     position: 'top'
                 },
                 tooltip: {
-                    enabled: false  // DISABLE ALL TOOLTIPS FOR CANDLESTICK CHART
+                    enabled: true, // Start with tooltips enabled
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+                    titleColor: 'white',
+                    bodyColor: 'white',
+                    borderColor: '#3498db',
+                    borderWidth: 2,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    padding: 15,
+                    bodySpacing: 6,
+                    titleSpacing: 6,
+                    caretPadding: 10,
+                    yAlign: 'top',
+                    xAlign: 'center',
+                    position: 'average',
+                    callbacks: {
+                        afterBody: function(context) {
+                            // Check if pattern tooltips are enabled
+                            const showPatternTooltips = document.getElementById('pattern-tooltips-checkbox')?.checked;
+                            if (!showPatternTooltips) {
+                                return [];
+                            }
+                            
+                            const index = context[0].dataIndex;
+                            const originalIndex = index + startIndex;
+                            const pattern = patterns.find(p => p.index === originalIndex);
+                            if (pattern) {
+                                return [
+                                    ``, 
+                                    `🎯 Pattern: ${pattern.emoji} ${pattern.name}`, 
+                                    `Confidence: ${Math.round(pattern.confidence * 100)}%`, 
+                                    `Type: ${pattern.bullish ? 'Bullish ⬆️' : 'Bearish ⬇️'}`,
+                                    `Description: ${pattern.description}`
+                                ];
+                            }
+                            return [];
+                        }
+                    }
                 }
             },
             scales: {
@@ -568,12 +603,43 @@ function createCandlestickChart(canvasId, data, patterns) {
         addPatternHighlights(candlestickChart, adjustedPatterns, labels);
     }
     
-    console.log(`📈 Candlestick chart created with ${CANDLESTICK_CHART_CANDLES} candles and ${adjustedPatterns.length} visible patterns (no tooltips)`);
+    // Initialize tooltip controls
+    initializeTooltipControls(candlestickChart, adjustedPatterns, patterns, startIndex);
+    
+    console.log(`📈 Candlestick chart created with configurable tooltips`);
     return candlestickChart;
 }
 
+// Initialize tooltip control checkboxes
+function initializeTooltipControls(chart, adjustedPatterns, allPatterns, startIndex) {
+    const marketTooltipCheckbox = document.getElementById('market-tooltips-checkbox');
+    const patternTooltipCheckbox = document.getElementById('pattern-tooltips-checkbox');
+    
+    if (!marketTooltipCheckbox || !patternTooltipCheckbox) {
+        console.warn('Tooltip control checkboxes not found');
+        return;
+    }
+    
+    // Set default states (both checked)
+    marketTooltipCheckbox.checked = true;
+    patternTooltipCheckbox.checked = true;
+    
+    // Market tooltips control
+    marketTooltipCheckbox.addEventListener('change', function() {
+        chart.options.plugins.tooltip.enabled = this.checked;
+        chart.update('none');
+        
+        console.log(`Market tooltips ${this.checked ? 'enabled' : 'disabled'}`);
+    });
+    
+    // Pattern tooltips control (handled in the callback, no need for chart update)
+    patternTooltipCheckbox.addEventListener('change', function() {
+        console.log(`Pattern tooltips ${this.checked ? 'enabled' : 'disabled'}`);
+        // The tooltip callback will check this checkbox state automatically
+    });
+}
 
-// Add pattern highlighting to chart - SIMPLIFIED VERSION WITHOUT ANY TOOLTIPS
+// Updated pattern highlighting function
 function addPatternHighlights(chart, patterns, labels) {
     const originalDraw = chart.draw;
     
