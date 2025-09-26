@@ -132,6 +132,33 @@ body {
     border-bottom: 2px solid #ecf0f1;
 }
 
+/* Reload Button */
+.reload-button {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.reload-button:hover {
+    background: linear-gradient(135deg, #27ae60, #229954);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.reload-button:active {
+    transform: translateY(0);
+}
+
 .stock-symbol {
     font-size: 2.2em;
     font-weight: bold;

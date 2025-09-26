@@ -1615,3 +1615,18 @@ function initializeReferencePatternCards() {
         });
     });
 }
+
+// Reload functions for data refresh
+function reloadIntradayData() {
+    console.log('🔄 Reloading 30-minute intraday data...');
+    // Clear cached data to force fresh API call
+    intradayData = null;
+    loadIntradayData(currentSymbol);
+}
+
+function reloadIntraday15Data() {
+    console.log('🔄 Reloading 15-minute intraday data...');
+    // Clear cached data to force fresh API call
+    intraday15Data = null;
+    loadIntraday15Data(currentSymbol);
+}
