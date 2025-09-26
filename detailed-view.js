@@ -448,8 +448,7 @@ function createCandlestickChart(canvasId, data, patterns) {
     const filteredData = data.historicalData.slice(startIndex);
     
     const labels = filteredData.map(item => {
-        const date = new Date(item.datetime || item.date);
-        return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        return formatChartDateTime(item.datetime || item.date);
     });
     
     const prices = filteredData.map(item => parseFloat(item.close));
@@ -759,6 +758,17 @@ function updateCandlestickUI(data, patterns) {
     updateDetectedPatternsList(patterns);
     updatePatternSummary(patterns);
     highlightDetectedPatternsInGuide(patterns);
+}
+
+// Helper function to format datetime consistently across all charts
+// Format: ${day}-${month} ${hours}:${minutes} with 24-hour format
+function formatChartDateTime(datetime) {
+    const d = new Date(datetime);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}.${month} ${hours}:${minutes}`;
 }
 
 // coomon function to show datetime
@@ -1165,7 +1175,7 @@ function createChart(canvasId, data, title, interval = 'daily') {
         if (interval === 'daily') {
             return new Date(item.date).toLocaleDateString();
         } else {
-            return new Date(item.datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            return formatChartDateTime(item.datetime);
         }
     });
     
