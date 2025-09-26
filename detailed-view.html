@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="chart-container">
-                        <canvas id="daily-chart"></canvas>
+                        <canvas id="dailyChart"></canvas>
                     </div>
 
                     <div class="indicators-grid">
@@ -109,7 +109,7 @@
                     </div>
 
                     <div class="chart-container">
-                        <canvas id="intraday-chart"></canvas>
+                        <canvas id="intradayChart"></canvas>
                     </div>
 
                     <div class="indicators-grid">
@@ -172,7 +172,7 @@
                     </div>
 
                     <div class="chart-container">
-                        <canvas id="intraday15-chart"></canvas>
+                        <canvas id="intraday15Chart"></canvas>
                     </div>
 
                     <div class="indicators-grid">
@@ -235,7 +235,7 @@
                     </div>
 
                     <div class="chart-container">
-                        <canvas id="intraday5-chart"></canvas>
+                        <canvas id="intraday5Chart"></canvas>
                     </div>
 
                     <div class="indicators-grid">
@@ -299,7 +299,7 @@
                 <div class="candlestick-layout">
                     <div class="chart-section">
                         <div class="chart-container">
-                            <canvas id="candlestick-chart"></canvas>
+                            <canvas id="candlestickChart"></canvas>
                         </div>
                         
                         <!-- NEW: Tooltip Controls -->
@@ -327,7 +327,7 @@
 
                     <div class="pattern-detection-panel">
                         <h3>🎯 Detected Patterns</h3>
-                        <div id="detected-patterns-list">
+                        <div id="candlestick-patterns-list">
                             <div class="no-patterns">No patterns detected yet...</div>
                         </div>
                         
@@ -445,7 +445,7 @@
                 <div class="candlestick-layout">
                     <div class="chart-section">
                         <div class="chart-container">
-                            <canvas id="candlestick5-chart"></canvas>
+                            <canvas id="candlestick5Chart"></canvas>
                         </div>
 
                         <!-- Tooltip Controls -->
@@ -473,7 +473,7 @@
 
                     <div class="pattern-detection-panel">
                         <h3>🎯 Detected Patterns</h3>
-                        <div id="detected-patterns5-list">
+                        <div id="candlestick5-patterns-list">
                             <div class="no-patterns">No patterns detected yet...</div>
                         </div>
 
@@ -580,21 +580,22 @@
                     </div>
 
                     <div class="chatgpt-controls">
-                        <button class="btn btn-primary" id="generateAnalysisBtn">
+                        <button class="btn btn-primary" id="submit-analysis" onclick="requestAIAnalysis()">
                             🧠 Generate AI Analysis
                         </button>
                         <div id="analysis-status" class="analysis-status hidden"></div>
                     </div>
 
                     <div class="analysis-container">
-                        <div id="chatgpt-prompt" class="prompt-section" style="display: none;">
-                            <h4>📋 Analysis Prompt:</h4>
-                            <div class="prompt-text" id="prompt-content"></div>
+                        <div id="ai-loading" class="loading-spinner" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Analyzing data...</p>
                         </div>
 
-                        <div id="chatgpt-response" class="response-section" style="display: none;">
-                            <h4>🎯 AI Analysis Results:</h4>
-                            <div class="response-text" id="response-content"></div>
+                        <div id="ai-error" class="error-message" style="display: none;"></div>
+
+                        <div id="ai-results" class="response-section" style="display: none;">
+                            <!-- AI analysis results will be populated here -->
                         </div>
 
                         <div id="chatgpt-placeholder" class="placeholder-section">
@@ -644,8 +645,14 @@
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="apiKey.js"></script>
-    <script src="candlestick-patterns.js"></script>
-    <script src="detailed-view.js"></script>
+    <!-- Modular JavaScript Files -->
+    <script src="js/common-utils.js"></script>
+    <script src="js/daily-tab.js"></script>
+    <script src="js/intraday-30min-tab.js"></script>
+    <script src="js/intraday-15min-tab.js"></script>
+    <script src="js/intraday-5min-tab.js"></script>
+    <script src="js/candlestick-patterns.js"></script>
+    <script src="js/ai-analysis.js"></script>
     <script src="debug.js"></script>
 </body>
 </html>
