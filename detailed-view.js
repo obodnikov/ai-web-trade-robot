@@ -762,7 +762,7 @@ function updateCandlestickUI(data, patterns) {
 }
 
 // coomon function to show datetime
-function formatDateTime(datetime) {
+function formatDateTimeWithYear(datetime) {
     const d = new Date(datetime);
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -817,7 +817,7 @@ function updateDetectedPatternsList(patterns) {
                     ${pattern.description}
                 </div>
                 <div class="pattern-location">
-                    Location: Candle ${pattern.index} @ ${formatDateTime(pattern.datetime)} • Price: ${pattern.price.toFixed(2)}
+                    Location: Candle ${pattern.index} @ ${formatDateTimeWithYear(pattern.datetime)} • Price: ${pattern.price.toFixed(2)}
                 </div>
             </div>
         `;
