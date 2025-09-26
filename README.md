@@ -10,8 +10,8 @@ A comprehensive stock market analysis tool that provides real-time trading signa
 - **📈 Dual Data Sources**: Alpha Vantage for main analysis + TwelveData for detailed charts
 - **🎨 Interactive Charts**: Real-time price visualization with Chart.js and moving averages
 - **🔍 Enhanced Detailed Analysis**: Click any stock card for comprehensive TwelveData analysis
-- **📊 Multiple Timeframes**: Daily analysis (Alpha Vantage) + Daily, 30-minute & 15-minute intervals (TwelveData)
-- **🕯️ Advanced Candlestick Pattern Recognition**: 15-minute patterns tab with visual pattern identification and interactive pattern details
+- **📊 Multiple Timeframes**: Daily analysis (Alpha Vantage) + Daily, 30-minute, 15-minute & 5-minute intervals (TwelveData)
+- **🕯️ Advanced Candlestick Pattern Recognition**: 15-minute & 5-minute patterns tabs with visual pattern identification and interactive pattern details
 - **Smart Fallback System**: Alpha Vantage → Polygon.io → TwelveData → Realistic Demo Data
 - **Improved Technical Analysis**: MACD, RSI, and Simple Moving Average indicators with real market data
 - **Consistent Trading Signals**: More reliable Buy/Sell/Hold recommendations with confidence levels
@@ -23,10 +23,11 @@ A comprehensive stock market analysis tool that provides real-time trading signa
 
 ### 🕯️ **NEW: Advanced Candlestick Pattern Analysis**
 - **Visual Pattern Recognition**: 12 different candlestick patterns with emoji indicators
+- **Dual Timeframes**: 15-minute and 5-minute pattern analysis tabs
 - **Pattern Details Modal**: Click any pattern card for comprehensive pattern information with examples
-- **Clean Chart Display**: Tooltips disabled on pattern charts for cleaner visual experience
+- **Configurable Tooltips**: Toggle market data and pattern information independently
 - **Pattern Confidence Levels**: High/medium confidence indicators with color coding
-- **Real-time Detection**: Patterns detected from live 15-minute TwelveData feeds
+- **Real-time Detection**: Patterns detected from live TwelveData feeds (15-min & 5-min intervals)
 - **Interactive Pattern Guide**: Reference cards that highlight when patterns are detected
 
 ### 📊 **Supported Candlestick Patterns**
@@ -71,7 +72,9 @@ A comprehensive stock market analysis tool that provides real-time trading signa
   - Daily analysis using TwelveData daily data
   - 30-minute intraday analysis using TwelveData API
   - 15-minute intraday analysis using TwelveData API
+  - 5-minute intraday analysis using TwelveData API
   - **🆕 15-minute candlestick patterns tab** with visual pattern recognition and modal details
+  - **🆕 5-minute candlestick patterns tab** with high-frequency pattern detection
 - **Enhanced UI**: Tab-based interface for easy timeframe switching
 - **Visual Indicators**: Data source quality badges and real-time updates
 
@@ -224,20 +227,23 @@ All API keys are now managed in the dedicated `apiKey.js` file for better organi
 2. **Daily Analysis**: View TwelveData daily data with interactive charts
 3. **30-Minute Analysis**: Switch to intraday tab for TwelveData 30-min analysis
 4. **15-Minute Analysis**: Switch to 15-min intraday tab for detailed short-term analysis
-5. **🆕 15-Minute Patterns**: View candlestick pattern analysis with visual recognition
-6. **🆕 Pattern Details**: Click any pattern card for comprehensive explanations with examples
-7. **Interactive Charts**: Hover over charts for detailed data points (except pattern charts)
-8. **Technical Indicators**: Enhanced visual indicators with color coding
-9. **Consistent Data**: All intervals use TwelveData for reliability
+5. **5-Minute Analysis**: Switch to 5-min intraday tab for high-frequency trading analysis
+6. **🆕 15-Minute Patterns**: View candlestick pattern analysis with visual recognition
+7. **🆕 5-Minute Patterns**: High-frequency pattern detection for scalping strategies
+8. **🆕 Pattern Details**: Click any pattern card for comprehensive explanations with examples
+9. **Interactive Charts**: Hover over charts for detailed data points (except pattern charts)
+10. **Technical Indicators**: Enhanced visual indicators with color coding
+11. **Consistent Data**: All intervals use TwelveData for reliability
 
 ### 🕯️ NEW: Candlestick Pattern Analysis
-1. **Switch to Patterns Tab**: Click "🕯️ 15-Min Patterns" tab in detailed view
-2. **View Chart**: 15-minute candlestick chart with pattern markers (🔨, 🪦, etc.)
+1. **Switch to Patterns Tab**: Click "🕯️ 15-Min Patterns" or "🕯️ 5-Min Patterns" tab in detailed view
+2. **View Chart**: Interactive candlestick chart with pattern markers (🔨, 🪦, etc.) and SMA lines
 3. **🆕 Configure Tooltips**: Use checkboxes below chart to toggle market data and pattern tooltips
 4. **Check Detected Patterns**: Right panel shows all detected patterns with confidence levels
 5. **Pattern Summary**: View bullish vs bearish pattern counts and overall market bias
 6. **Learn Patterns**: Click any reference pattern card for detailed explanations
-7. **🆕 Customizable Display**: Choose between clean charts or information-rich tooltips
+7. **🆕 Dual Timeframes**: Compare 15-minute trends with 5-minute scalping opportunities
+8. **🆕 Customizable Display**: Choose between clean charts or information-rich tooltips
 
 ### Sample Tickers (Optimized for All APIs)
 - **Mega Cap**: AAPL, MSFT, NVDA, GOOGL, AMZN
@@ -258,7 +264,9 @@ All API keys are now managed in the dedicated `apiKey.js` file for better organi
    - 🥇 **Daily Interval**: TwelveData Daily API (1day interval, 60 points)
    - ⚡ **30-Min Interval**: TwelveData Intraday API (30min interval, 78 points)
    - ⚡ **15-Min Interval**: TwelveData Intraday API (15min interval, 78 points)
+   - ⚡ **5-Min Interval**: TwelveData Intraday API (5min interval, 78 points)
    - 🕯️ **🆕 15-Min Patterns**: Advanced candlestick pattern recognition with visual identification
+   - 🕯️ **🆕 5-Min Patterns**: High-frequency pattern detection for scalping strategies
    - 🔵 **Demo Fallback**: Realistic simulation for all intervals
    - **Benefit**: Consistent data source ensures reliable comparisons
 
@@ -272,7 +280,8 @@ All API keys are now managed in the dedicated `apiKey.js` file for better organi
 ### 4. **Why This Architecture?**
    - **Main Page**: Alpha Vantage provides best historical data for overview analysis
    - **Detailed View**: TwelveData provides consistent multi-timeframe analysis
-   - **Pattern Analysis**: 15-minute intervals optimal for short-term pattern recognition
+   - **Pattern Analysis**: 15-minute intervals for swing trading, 5-minute for scalping
+   - **Multi-Timeframe Strategy**: Compare patterns across different time horizons
    - **No API Mixing**: Each view optimized for its specific use case
    - **Better UX**: Users get specialized tools for different analysis needs
 
@@ -511,7 +520,9 @@ Comprehensive analysis includes:
 - **Daily Tab**: TwelveData daily analysis (up to 60 days)
 - **30-Minute Tab**: TwelveData intraday analysis (78 intervals)
 - **15-Minute Tab**: TwelveData intraday analysis (78 intervals)
+- **5-Minute Tab**: TwelveData intraday analysis (78 intervals)
 - **🆕 15-Minute Patterns Tab**: Advanced candlestick pattern recognition
+- **🆕 5-Minute Patterns Tab**: High-frequency pattern detection for scalping
 - **Tab Switching**: Seamless transition between timeframes
 - **Consistent Source**: All tabs use TwelveData for reliability
 
@@ -522,7 +533,7 @@ Comprehensive analysis includes:
 - **Range Information**: High/low and volume data
 
 #### 🆕 Advanced Candlestick Pattern Recognition
-The new "15-mn patterns" tab provides comprehensive pattern analysis:
+The new "15-Min Patterns" and "5-Min Patterns" tabs provide comprehensive pattern analysis:
 
 **Visual Chart Features:**
 - **🆕 Configurable Tooltips**: Two independent checkboxes control market data and pattern information display
@@ -532,10 +543,11 @@ The new "15-mn patterns" tab provides comprehensive pattern analysis:
 - **User Control**: Choose between clean visualization or detailed hover information
 
 **Pattern Detection Panel:**
-- **Real-time Detection**: Patterns detected from live 15-minute data
+- **Real-time Detection**: Patterns detected from live 15-minute and 5-minute data
 - **Confidence Scoring**: Only patterns above 75% confidence threshold shown
 - **Pattern Categories**: Clear bullish/bearish classification
 - **Time & Price Location**: Exact candle index and price level for each pattern
+- **Dual Timeframes**: Compare swing trading patterns (15-min) with scalping opportunities (5-min)
 
 **Pattern Summary Statistics:**
 - **Bullish Count**: Number of detected bullish reversal patterns
@@ -626,13 +638,15 @@ The new "15-mn patterns" tab provides comprehensive pattern analysis:
 
 ## 📝 Changelog
 
-### v4.1.0 (Current - Advanced Pattern Recognition + Configurable Tooltips)
-- 🕯️ **Advanced candlestick pattern recognition**: 12 patterns with visual detection
+### v4.1.0 (Current - Advanced Pattern Recognition + 5-Minute Intervals)
+- 🕯️ **Advanced candlestick pattern recognition**: 12 patterns with visual detection on dual timeframes
+- ⚡ **NEW: 5-minute intervals**: Both standard analysis and pattern recognition for scalping strategies
 - 🎯 **Pattern confidence scoring**: High/medium/low confidence indicators
 - 🔧 **🆕 Configurable tooltips**: Independent controls for market data and pattern information
 - 🔍 **Interactive pattern details**: Modal popups with comprehensive explanations (if implemented)
 - 📊 **Pattern summary statistics**: Bullish vs bearish counts with market bias
 - 🎨 **Flexible chart display**: User-controlled tooltip visibility for customized viewing experience
+- ⚡ **High-frequency trading support**: 5-minute intervals for day trading and scalping analysis
 - 🖼️ **Custom favicon**: Trading chart themed favicon.svg
 - 🐛 **Debug utilities**: Enhanced debugging tools for development
 - 📱 **Mobile optimization**: Improved responsive design for pattern analysis
