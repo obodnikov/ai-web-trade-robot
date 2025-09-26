@@ -448,8 +448,7 @@ function createCandlestickChart(canvasId, data, patterns) {
     const filteredData = data.historicalData.slice(startIndex);
     
     const labels = filteredData.map(item => {
-        const date = new Date(item.datetime || item.date);
-        return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        return formatChartDateTime(item.datetime || item.date);
     });
     
     const prices = filteredData.map(item => parseFloat(item.close));
@@ -761,8 +760,19 @@ function updateCandlestickUI(data, patterns) {
     highlightDetectedPatternsInGuide(patterns);
 }
 
+// Helper function to format datetime consistently across all charts
+// Format: ${day}-${month} ${hours}:${minutes} with 24-hour format
+function formatChartDateTime(datetime) {
+    const d = new Date(datetime);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${day}.${month} ${hours}:${minutes}`;
+}
+
 // coomon function to show datetime
-function formatDateTime(datetime) {
+function formatDateTimeWithYear(datetime) {
     const d = new Date(datetime);
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -817,7 +827,7 @@ function updateDetectedPatternsList(patterns) {
                     ${pattern.description}
                 </div>
                 <div class="pattern-location">
-                    Location: Candle ${pattern.index} @ ${formatDateTime(pattern.datetime)} • Price: ${pattern.price.toFixed(2)}
+                    Location: Candle ${pattern.index} @ ${formatDateTimeWithYear(pattern.datetime)} • Price: ${pattern.price.toFixed(2)}
                 </div>
             </div>
         `;
@@ -1165,7 +1175,7 @@ function createChart(canvasId, data, title, interval = 'daily') {
         if (interval === 'daily') {
             return new Date(item.date).toLocaleDateString();
         } else {
-            return new Date(item.datetime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            return formatChartDateTime(item.datetime);
         }
     });
     
@@ -1604,4 +1614,19 @@ function initializeReferencePatternCards() {
             this.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.1)';
         });
     });
+}
+
+// Reload functions for data refresh
+function reloadIntradayData() {
+    console.log('🔄 Reloading 30-minute intraday data...');
+    // Clear cached data to force fresh API call
+    intradayData = null;
+    loadIntradayData(currentSymbol);
+}
+
+function reloadIntraday15Data() {
+    console.log('🔄 Reloading 15-minute intraday data...');
+    // Clear cached data to force fresh API call
+    intraday15Data = null;
+    loadIntraday15Data(currentSymbol);
 }
