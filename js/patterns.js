@@ -966,11 +966,24 @@ function initializeTooltipControls(chart, adjustedPatterns, allPatterns, startIn
 
     // Market tooltips control
     marketTooltipCheckbox.addEventListener('change', function() {
+        if (!chart || !chart.options || !chart.options.plugins || !chart.options.plugins.tooltip) {
+            console.warn('Chart or tooltip options not available');
+            return;
+        }
+
         chart.options.plugins.tooltip.enabled = this.checked;
 
         // Safely update chart with error handling
         try {
+            if (chart && typeof chart.update === 'function') {
+                if (chart && typeof chart.update === 'function') {
+        try {
             chart.update('none');
+        } catch (error) {
+            console.warn('Error updating chart with pattern highlights:', error);
+        }
+    }
+            }
         } catch (error) {
             console.error('Error updating chart:', error);
         }
@@ -1004,11 +1017,24 @@ function initialize5TooltipControls(chart, adjustedPatterns, allPatterns, startI
 
     // Market tooltips control
     marketTooltipCheckbox.addEventListener('change', function() {
+        if (!chart || !chart.options || !chart.options.plugins || !chart.options.plugins.tooltip) {
+            console.warn('Chart or tooltip options not available');
+            return;
+        }
+
         chart.options.plugins.tooltip.enabled = this.checked;
 
         // Safely update chart with error handling
         try {
+            if (chart && typeof chart.update === 'function') {
+                if (chart && typeof chart.update === 'function') {
+        try {
             chart.update('none');
+        } catch (error) {
+            console.warn('Error updating chart with pattern highlights:', error);
+        }
+    }
+            }
         } catch (error) {
             console.error('Error updating 5-minute chart:', error);
         }
@@ -1079,7 +1105,13 @@ function addPatternHighlights(chart, patterns, labels) {
         ctx.restore();
     };
 
-    chart.update('none');
+    if (chart && typeof chart.update === 'function') {
+        try {
+            chart.update('none');
+        } catch (error) {
+            console.warn('Error updating chart with pattern highlights:', error);
+        }
+    }
 }
 
 // Add pattern highlights for 5-minute chart
@@ -1138,5 +1170,11 @@ function addPattern5Highlights(chart, patterns, labels) {
         ctx.restore();
     };
 
-    chart.update('none');
+    if (chart && typeof chart.update === 'function') {
+        try {
+            chart.update('none');
+        } catch (error) {
+            console.warn('Error updating chart with pattern highlights:', error);
+        }
+    }
 }
