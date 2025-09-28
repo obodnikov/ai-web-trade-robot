@@ -792,7 +792,7 @@ function updateCandlestick5UI(data, patterns) {
     `;
 
     updateDetected5PatternsList(patterns);
-    highlightDetectedPatternsInGuide(patterns);
+//    highlightDetectedPatternsInGuide(patterns);
 }
 
 // Update detected patterns list
