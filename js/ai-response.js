@@ -115,17 +115,18 @@ async function generateAIAnalysis() {
             throw new Error(result.error || 'Analysis failed');
         }
         
-        // Display the response
+        // Display the response with markdown parsing
+        const formattedAnalysis = parseMarkdownToHTML(result.analysis);
         responseContent.innerHTML = `
             <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                 <strong>🤖 AI Analysis for ${result.symbol}</strong>
                 <p style="margin: 5px 0; font-size: 0.9em; color: #7f8c8d;">
-                    Generated: ${new Date(result.timestamp).toLocaleString()} | 
-                    Model: ${result.model} | 
+                    Generated: ${new Date(result.timestamp).toLocaleString()} |
+                    Model: ${result.model} |
                     Tokens: ${result.tokensUsed}
                 </p>
             </div>
-            <div style="line-height: 1.6; white-space: pre-wrap;">${result.analysis}</div>
+            <div style="line-height: 1.6;">${formattedAnalysis}</div>
         `;
         responseDiv.style.display = 'block';
         
@@ -515,4 +516,41 @@ function generateMockAnalysis() {
             </div>
         </div>
     `;
+}
+
+// Simple markdown to HTML parser
+function parseMarkdownToHTML(markdown) {
+    if (!markdown) return '';
+    
+    let html = markdown;
+    
+    // Headers (### -> h3, ## -> h2, # -> h1)
+    html = html.replace(/^### (.*$)/gim, '<h3 style="color: #2c3e50; margin: 20px 0 10px 0; font-size: 1.2em;">$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2 style="color: #2c3e50; margin: 25px 0 15px 0; font-size: 1.4em;">$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1 style="color: #2c3e50; margin: 30px 0 20px 0; font-size: 1.6em;">$1</h1>');
+    
+    // Bold **text** or __text__
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    
+    // Italic *text* or _text_
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+    
+    // Unordered lists (lines starting with - or *)
+    html = html.replace(/^\s*[-*]\s+(.+)$/gim, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/s, '<ul style="margin: 10px 0; padding-left: 25px;">$1</ul>');
+    
+    // Line breaks (double newline = paragraph)
+    html = html.split('\n\n').map(para => {
+        if (para.trim() && !para.includes('<h') && !para.includes('<ul')) {
+            return `<p style="margin: 15px 0;">${para.trim()}</p>`;
+        }
+        return para;
+    }).join('\n');
+    
+    // Single line breaks
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
 }
