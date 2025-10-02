@@ -1556,22 +1556,6 @@ async function loadIntraday5Data(symbol) {
     }
 }
 
-// ChatGPT stub functions (simplified)
-function initializeChatGPTTab() {
-    const generateBtn = document.getElementById('generateAnalysisBtn');
-    const statusDiv = document.getElementById('analysis-status');
-    
-    if (!dailyData || !intradayData) {
-        statusDiv.className = 'analysis-status error';
-        statusDiv.style.display = 'block';
-        statusDiv.textContent = 'Please load data from both Daily and 30-Minute tabs first before generating AI analysis.';
-        generateBtn.disabled = true;
-        return;
-    }
-    
-    generateBtn.disabled = false;
-    statusDiv.style.display = 'none';
-}
 
 // Page initialization
 window.addEventListener('load', function() {
@@ -1594,9 +1578,9 @@ window.addEventListener('load', function() {
     // Set up ChatGPT button if exists
     const generateBtn = document.getElementById('generateAnalysisBtn');
     if (generateBtn) {
-        generateBtn.addEventListener('click', function(e) {
+        generateBtn.addEventListener('click', async function(e) {
             e.preventDefault();
-            alert('ChatGPT integration requires middleware setup. See documentation.');
+            await generateAIAnalysis();
         });
     }
     
